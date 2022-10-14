@@ -1,7 +1,7 @@
 
 
 
-const myStyleMap=[
+export const MyStyleDarkMap=[
     {
         "featureType": "all",
         "elementType": "labels",
@@ -265,4 +265,3 @@ const myStyleMap=[
     }
 ]
 
-export default {myStyleMap}

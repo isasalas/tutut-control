@@ -16,85 +16,104 @@ import {
   DialogContentText,
   DialogContent,
   DialogActions,
-  Unstable_Grid2 as Grid
+  Unstable_Grid2 as Grid,
+  Autocomplete,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
   EditRounded as EditRoundedIcon,
   SearchRounded as SearchRoundedIcon,
-  MoreVertRounded as MoreVertRoundedIcon
+  MoreVertRounded as MoreVertRoundedIcon,
+  FilterListRounded as FilterListRoundedIcon
 } from '@mui/icons-material'
 import {
   MySvgMinibus,
   MySvgLinea
 } from '../assets/mySvg';
-import { urlApi } from '../api/constantes';
-import {
-  GoogleMap,
-  useJsApiLoader,
-  MarkerF
-} from '@react-google-maps/api';
-import mapStyler from '../assets/maps/myStyleMap'
-import { MuiColorInput } from 'mui-color-input'
-import { useSnackbar } from 'notistack';
+import { urlApi } from '../api/myApiData';
 
+import { useSnackbar } from 'notistack';
+import { RoleModelJson, UserModelJson } from '../models/models';
+
+import PhoneIcon from '@mui/icons-material/Phone';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import PersonPinIcon from '@mui/icons-material/PersonPin';
+import PhoneMissedIcon from '@mui/icons-material/PhoneMissed';
 
 
 
 
 
 const UsuariosScreen = () => {
+  const [value, setValue] = React.useState(0);
 
-  const [Lineas, setLineas] = React.useState(Array);
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
+
+
+
+  return (
+    <Box container>
+      <Tabs
+        value={value}
+        onChange={handleChange}
+        aria-label="icon position tabs example"
+      >
+        <Tab icon={<PersonPinIcon />} iconPosition="bottom" label="Pasajero" />
+        <Tab icon={<PersonPinIcon />} iconPosition="bottom" label="Conductor" />
+        <Tab icon={<PersonPinIcon />} iconPosition="bottom" label="Socio" />
+        <Tab icon={<PersonPinIcon />} iconPosition="bottom" label="Control" />
+        <Tab icon={<PersonPinIcon />} iconPosition="bottom" label="Admin" />
+        <Tab icon={<PersonPinIcon />} iconPosition="bottom" label="Sistema" />
+
+      </Tabs>
+    </Box>
+
+  );
+}
+
+export default React.memo(UsuariosScreen)
+
+
+
+
+
+
+
+
+
+/*
+
+
+  const [Roles, setRoles] = React.useState(Array);
+  const [Role, setRole] = React.useState(RoleModelJson);
+  const [Users, setUsers] = React.useState(Array);
+  const [User, setUser] = React.useState(UserModelJson);
   const [anchorElMenu, setAnchorElMenu] = React.useState(null);
-  const [Linea, setLinea] = React.useState({
-    id: '',
-    name: '',
-    description: '',
-    directionLat: -17.783957,
-    directionLon: -63.181132,
-    colorBg: 'ffffff',
-    colorPr: '3c3c3c',
-    phone: ''
-  });
 
 
-  const [newLinea, setNewLinea] = React.useState({
-    id: '',
-    name: '',
-    description: '',
-    directionLat: -17.783957,
-    directionLon: -63.181132,
-    colorBg: 'ffffff',
-    colorPr: '3c3c3c',
-    phone: ''
-  })
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyBJ7gTWLlIZE3GqIuwwRV1FJnvx2AceHLM"
-  })
 
-  const { enqueueSnackbar } = useSnackbar();
 
   const [openDialogCreate, setOpenDialogCreate] = React.useState(false);
   const [openDialogEdit, setOpenDialogEdit] = React.useState(false);
   const [openDialogDelete, setOpenDialogDelete] = React.useState(false);
-  const [searchName, setSearchName] = React.useState("");
-
+  const [searchData, setSearchData] = React.useState({ name: '', idrole: '' });
 
   const [scrollDialog, setScrollDialog] = React.useState('paper');
   const [reload, setReload] = React.useState();
 
+  const { enqueueSnackbar } = useSnackbar();
+
 
   const handleClickOpenDialogCreate = (scrollType) => () => {
+    setUser(UserModelJson);
     setOpenDialogCreate(true);
     setScrollDialog(scrollType);
   };
-/*
-  const handleClickOpenDialogEdit = (scrollType) => () => {
-    setOpenDialogEdit(true);
-    setScrollDialog(scrollType);
-  };*/
+
 
   const handleCloseDialog = () => {
     setOpenDialogCreate(false);
@@ -102,14 +121,19 @@ const UsuariosScreen = () => {
     setOpenDialogDelete(false);
   };
 
-
+  const apiUser = "/user";
   const descriptionElementRef = React.useRef(null);
 
 
 
   React.useEffect(() => {
-    axios.get(urlApi + '/linea').then((response) => {
-      setLineas(response.data);
+    axios.get(urlApi + apiUser + "/role").then((response) => {
+      setUsers(response.data);
+      //console.log(response.data)
+    });
+    axios.get(urlApi + "/role").then((response) => {
+      setRoles(response.data);
+      //console.log(response.data)
     });
     if (openDialogCreate) {
       const { current: descriptionElement } = descriptionElementRef;
@@ -131,30 +155,28 @@ const UsuariosScreen = () => {
     }
   }, [openDialogCreate, openDialogDelete, openDialogEdit, reload]);
 
-  if (!Lineas) return null;
+  if (!Users || !Roles) return null;
 
 
   const openMenu = Boolean(anchorElMenu);
 
-  const handleClickMenu = ({ linea, event }) => {
+  const handleClickMenu = ({ user, event }) => {
     setAnchorElMenu(event.currentTarget);
-    setLinea(linea);
-
-
+    setUser(user);
   };
+
   const handleCloseMenu = () => {
     setAnchorElMenu(null);
-
-    console.log(JSON.stringify(Linea))
-
+    console.log(JSON.stringify(User))
   };
 
-
-
+  const defaultProps = {
+    options: Roles,
+    getOptionLabel: (option) => option.name,
+  };
 
 
   return (
-
     <Box>
       <Grid container
         paddingBottom={3}
@@ -174,63 +196,109 @@ const UsuariosScreen = () => {
         </Grid>
         <Grid xs={12} sm={8}>
           <Typography variant="h3">
-            <b>Lineas</b>
+            <b>Usuarios</b>
           </Typography>
           <div style={{ fontSize: '15px' }} >
-            Administre las lineas de transporte publicoAdministre las lineas de transporte publicoAdministre las lineas de transporte publico
+            Administre los usuarios del sistema de lineas de transporte publico
           </div>
           <br></br>
           <Button variant="contained"
-            //to="/newlinea"
+            //to="/User"
             onClick={handleClickOpenDialogCreate('paper')}
           >
-            Crear Nueva Linea
+            Crear Nuevo usuario
           </Button>
         </Grid>
       </Grid>
 
       <Divider />
-      <Box sx={{ pb: 1, display: 'flex', alignItems: 'flex-end' }}>
-        <SearchRoundedIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
-        <TextField
-          label="Buscar"
-          placeholder="58"
-          variant="standard"
-          onChange={(e) => { setSearchName(e.target.value) }}
-        />
-      </Box>
+      <Grid container columnSpacing={3} pb={1} pt={1}>
+        <Grid container alignItems='flex-end' >
+          <SearchRoundedIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+          <TextField
 
-      <Grid container columnSpacing={3}>
-        {Lineas.filter((val) => {
-          if (searchName === "") return val
-          if (val.name.toLowerCase().includes(searchName.toLowerCase())) return val
-          return val;
-        }).map((linea) => (
+            label="Buscar"
+            placeholder="58"
+            variant="standard"
+            onChange={(e) => { setSearchData({ ...searchData, name: e.target.value }) }}
+          />
+        </Grid>
+        <Grid container alignItems='flex-end' >
+          <FilterListRoundedIcon sx={{ color: 'action.active', mr: 1, my: 0.5 }} />
+          <Autocomplete
+            onChange={(e, value) => {
+              //console.log(value.id);
+              console.log(JSON.stringify(searchData))
+              if (value) return setSearchData({ ...searchData, idrole: value.id })
+              return setSearchData({ ...searchData, idrole: null })
+            }}
+            {...defaultProps}
+
+            sx={{ width: 180 }}
+            renderInput={(params) => (
+              <TextField {...params}
+                label="Role" variant="standard" />
+            )}
+          />
+        </Grid>
+
+      </Grid>
+      <Divider />
+
+
+      <Grid container columnSpacing={3} >
+
+
+
+        {Users.filter((val) => {
+
+
+          if (searchData.name === "" && searchData.idrole===null) return val
+
+
+          if (searchData.name !== "" && searchData.idrole===null) {
+
+            if (val.name.toLowerCase().includes(searchData.name.toLowerCase())) {
+              return val
+            }
+          }
+          if (searchData.name === "" && searchData.idrole!==null) {
+            if (val.roleId === searchData.idrole) return val
+          }
+          if (searchData.name !== "" && searchData.idrole!==null) {
+            if (val.name.toLowerCase().includes(searchData.name.toLowerCase()) && val.roleId === searchData.idrole) {
+              return val
+            }
+
+          }
+
+
+
+          if (searchData.name === "" && !searchData.idrole) return val
+
+          if (val.name.toLowerCase().includes(searchData.name.toLowerCase())) {
+            if (!searchData.idrole) return val
+            if (val.roleId === searchData.idrole) return val
+          }
+        }).map((user) => (
           <Grid container
-            key={linea.id}
+            key={user.id}
             display="flex"
             justifyContent="space-between"
             alignItems="center"
             columnSpacing={2}
             xs={12} sm={6} md={4} lg={3} xl={2}>
 
-            <Grid xs={3} style={{ maxHeight: '50px', paddingLeft: '15px' }}>
-              <MySvgMinibus
-                style={{ maxHeight: '50px' }}
-                colorpr={linea.colorPr}
-                colorbg={linea.colorBg} />
-            </Grid>
-
             <Grid xs={8}>
               <ListItemText
-                primary={<Typography variant="h6">{linea.name}</Typography>}
-                secondary={linea.id} />
+                primary={<Typography variant="h6">{user.name}</Typography>}
+                secondary={user.id + " - " + user.role.name} />
             </Grid>
 
             <Grid xs={1} display="flex" justifyContent="center" alignItems="center">
               <IconButton aria-label="comment" onClick={(e) => {
                 //console.log(linea.id);
-                handleClickMenu({ event: e, linea: linea });
+                handleClickMenu({ event: e, user: user });
               }}>
                 <MoreVertRoundedIcon />
               </IconButton>
@@ -239,22 +307,12 @@ const UsuariosScreen = () => {
             <Grid xs={12}>
               <Divider variant="mind" />
             </Grid>
-
-
-
-
-
-
           </Grid>
-
-
         ))}
       </Grid>
 
+
       <div>
-
-
-
         <Dialog
           open={openDialogCreate}
           onClose={handleCloseDialog}
@@ -263,7 +321,7 @@ const UsuariosScreen = () => {
           aria-describedby="scroll-dialog-description"
         >
           <DialogTitle id="scroll-dialog-title">
-            Crear Nueva Linea
+            Crear Nuevo Usuario
           </DialogTitle>
           <DialogContent dividers={scrollDialog === 'paper'}>
 
@@ -277,12 +335,10 @@ const UsuariosScreen = () => {
                 columnSpacing={2}
                 rowSpacing={2}>
 
-
-
-                <Grid container xs={12} sm={6} >
+                <Grid container xs={12} sm={10} >
                   <Grid xs={12}>
                     <div style={{ fontSize: '15px' }} >
-                      Introduce el id, nombre, telefono, descripticion, colores y direccion de la nueva linea
+                      Introduce el id, nombre, apellido, telefono, correo y rol del nuevo usuario
                     </div>
                   </Grid>
 
@@ -290,13 +346,12 @@ const UsuariosScreen = () => {
                     <TextField
                       fullWidth
                       label="Id"
-                      value={newLinea.id}
+                      value={User.id}
                       onChange={(event) => {
-                        setNewLinea({ ...newLinea, id: event.target.value });
+                        setUser({ ...User, id: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
-
                       variant="standard"
                     />
                   </Grid>
@@ -304,9 +359,9 @@ const UsuariosScreen = () => {
                     <TextField
                       fullWidth
                       label="Nombre"
-                      value={newLinea.name}
+                      value={User.name}
                       onChange={(event) => {
-                        setNewLinea({ ...newLinea, name: event.target.value });
+                        setUser({ ...User, name: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
@@ -314,13 +369,45 @@ const UsuariosScreen = () => {
                       variant="standard"
                     />
                   </Grid>
-                  <Grid xs={12} >
+                  <Grid xs={6} >
+                    <TextField
+                      fullWidth
+                      type="password"
+
+                      label="contrasenia"
+                      value={User.password}
+                      onChange={(event) => {
+                        setUser({ ...User, password: event.target.value });
+                      }}
+                      name="numberformat"
+                      id="formatted-numberformat-input"
+
+                      variant="standard"
+                    />
+                  </Grid>
+                  <Grid xs={6} >
+                    <TextField
+                      fullWidth
+                      type="password"
+                      label="Confirma tu contrasenia"
+                      value={User.password}
+                      onChange={(event) => {
+                        setUser({ ...User, password: event.target.value });
+                      }}
+                      name="numberformat"
+                      id="formatted-numberformat-input"
+
+                      variant="standard"
+                    />
+                  </Grid>
+
+                  <Grid xs={4} >
                     <TextField
                       fullWidth
                       label="Telefono"
-                      value={newLinea.phone}
+                      value={User.lastname}
                       onChange={(event) => {
-                        setNewLinea({ ...newLinea, phone: event.target.value });
+                        setUser({ ...User, lastname: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
@@ -328,85 +415,21 @@ const UsuariosScreen = () => {
                       variant="standard"
                     />
                   </Grid>
-                  <Grid xs={12}>
+
+                  <Grid xs={8}>
                     <TextField
-                      required
                       fullWidth
-                      multiline
-                      label="Descripción"
-                      value={newLinea.description}
+                      label="email"
+                      value={User.email}
                       onChange={(event) => {
-                        setNewLinea({ ...newLinea, description: event.target.value });
+                        setUser({ ...User, email: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
                       variant="standard"
                     />
                   </Grid>
-                  <Grid container
-                    justifyContent="space-evenly"
-                    alignItems="center"
-                    xs={6} sm={6}
-                    maxWidth={200} >
-                    <Grid xs={12} >
-                      <MySvgMinibus colorbg={newLinea.colorBg} colorpr={newLinea.colorPr} />
-                    </Grid>
-                  </Grid>
-
-                  <Grid container xs={6} >
-                    <Grid xs={12} >
-                      <MuiColorInput
-                        label="Color Superior"
-                        variant="standard"
-                        format="hex"
-                        fullWidth
-                        value={'#' + newLinea.colorBg}
-                        onChange={(color, colors) => {
-                          setNewLinea({ ...newLinea, colorBg: colors.hex.slice(1) });
-                        }} /></Grid>
-                    <Grid xs={12} >
-                      <MuiColorInput
-                        label="Color Inferior"
-                        variant="standard"
-                        format="hex"
-                        fullWidth
-                        value={'#' + newLinea.colorPr}
-                        onChange={(color, colors) => {
-                          setNewLinea({ ...newLinea, colorPr: colors.hex.slice(1) });
-                        }} /></Grid>
-
-                  </Grid>
                 </Grid>
-
-                <Grid xs={12} sm={6} >
-                  direccion:
-                  {isLoaded ? <GoogleMap
-
-                    mapContainerStyle={{
-
-                      width: '100%',
-                      height: '300px'
-                    }}
-                    zoom={15}
-                    options={{ mapTypeControl: false, streetViewControl: false, styles: mapStyler.myStyleMap }}
-                    center={{ lat: newLinea.directionLat, lng: newLinea.directionLon }}
-                    //onLoad={onLoad}
-                    //onUnmount={onUnmount}
-                    onClick={(e) => {
-                      setNewLinea({ ...newLinea, directionLat: e.latLng.lat(), directionLon: e.latLng.lng() });
-                      console.log(JSON.stringify(newLinea))
-                    }}
-                  >
-
-                    <MarkerF position={{ lat: newLinea.directionLat, lng: newLinea.directionLon }}> </MarkerF>
-
-                    { /* Child components, such as markers, info windows, etc. */}
-                    <></>
-                  </GoogleMap> : <>cargando...</>}
-
-                </Grid>
-
-
               </Grid>
             </Box>
 
@@ -417,32 +440,22 @@ const UsuariosScreen = () => {
             <Button onClick={
               (e) => {
                 handleCloseDialog();
-                if (newLinea.id === ""
-                  || newLinea.name === ""
-                  || newLinea.phone === ""
-                  || newLinea.description === ""
-                  || newLinea.colorBg === ""
-                  || newLinea.colorPr === ""
-                  || newLinea.directionLat === ""
-                  || newLinea.directionLon === "") {
+                if (!User.id
+                  || !User.name
+                  || !User.lastname
+                  || !User.phone
+                  || !User.email
+                  || !User.password
+                  || !User.roleId) {
 
                   return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
                 }
 
-                axios.post(urlApi + '/linea', newLinea)
+                axios.post(urlApi + '/user', User)
                   .then((response) => {
                     //console.log(JSON.stringify(response));
-                    enqueueSnackbar(newLinea.name + " creado con exito", { variant: 'success' });
-                    setNewLinea({
-                      id: '',
-                      name: '',
-                      description: '',
-                      directionLat: -17.783957,
-                      directionLon: -63.181132,
-                      colorBg: 'ffffff',
-                      colorPr: '3c3c3c',
-                      phone: ''
-                    })
+                    enqueueSnackbar(User.name + " creado con exito", { variant: 'success' });
+                    setUser(UserModelJson)
                   })
                   .catch((e) => {
                     enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' });
@@ -493,9 +506,23 @@ const UsuariosScreen = () => {
                     <TextField
                       fullWidth
                       label="Id"
-                      value={Linea.id}
+                      value={User.id}
                       onChange={(event) => {
-                        setLinea({ ...Linea, id: event.target.value });
+                        setUser({ ...User, id: event.target.value });
+                      }}
+                      name="numberformat"
+                      id="formatted-numberformat-input"
+
+                      variant="standard"
+                    />
+                  </Grid>
+                  <Grid xs={12}>
+                    <TextField
+                      fullWidth
+                      label="pass"
+                      value={User.password}
+                      onChange={(event) => {
+                        setUser({ ...User, password: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
@@ -507,9 +534,23 @@ const UsuariosScreen = () => {
                     <TextField
                       fullWidth
                       label="Nombre"
-                      value={Linea.name}
+                      value={User.name}
                       onChange={(event) => {
-                        setLinea({ ...Linea, name: event.target.value });
+                        setUser({ ...User, name: event.target.value });
+                      }}
+                      name="numberformat"
+                      id="formatted-numberformat-input"
+
+                      variant="standard"
+                    />
+                  </Grid>
+                  <Grid xs={8} >
+                    <TextField
+                      fullWidth
+                      label="Apellido"
+                      value={User.lastname}
+                      onChange={(event) => {
+                        setUser({ ...User, lastname: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
@@ -521,9 +562,9 @@ const UsuariosScreen = () => {
                     <TextField
                       fullWidth
                       label="Telefono"
-                      value={Linea.phone}
+                      value={User.phone}
                       onChange={(event) => {
-                        setLinea({ ...Linea, phone: event.target.value });
+                        setUser({ ...User, phone: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
@@ -531,84 +572,25 @@ const UsuariosScreen = () => {
                       variant="standard"
                     />
                   </Grid>
+
                   <Grid xs={12}>
                     <TextField
-                      required
+
                       fullWidth
-                      multiline
-                      label="Descripción"
-                      value={Linea.description}
+
+                      label="email"
+                      value={User.email}
                       onChange={(event) => {
-                        setLinea({ ...Linea, description: event.target.value });
+                        setUser({ ...User, email: event.target.value });
                       }}
                       name="numberformat"
                       id="formatted-numberformat-input"
                       variant="standard"
                     />
                   </Grid>
-                  <Grid container
-                    justifyContent="space-evenly"
-                    alignItems="center"
-                    xs={6} sm={6}
-                    maxWidth={200} >
-                    <Grid xs={12} >
-                      <MySvgMinibus colorbg={Linea.colorBg} colorpr={Linea.colorPr} />
-                    </Grid>
-                  </Grid>
 
-                  <Grid container xs={6} >
-                    <Grid xs={12} >
-                      <MuiColorInput
-                        label="Color Superior"
-                        variant="standard"
-                        format="hex"
-                        fullWidth
-                        value={'#' + Linea.colorBg}
-                        onChange={(color, colors) => {
-                          setLinea({ ...Linea, colorBg: colors.hex.slice(1) });
-                        }} /></Grid>
-                    <Grid xs={12} >
-                      <MuiColorInput
-                        label="Color Inferior"
-                        variant="standard"
-                        format="hex"
-                        fullWidth
-                        value={'#' + Linea.colorPr}
-                        onChange={(color, colors) => {
-                          setLinea({ ...Linea, colorPr: colors.hex.slice(1) });
-                        }} /></Grid>
-
-                  </Grid>
-                </Grid>
-
-                <Grid xs={12} sm={6} >
-                  direccion:
-                  {isLoaded ? <GoogleMap
-
-                    mapContainerStyle={{
-
-                      width: '100%',
-                      height: '300px'
-                    }}
-                    zoom={15}
-                    options={{ mapTypeControl: false, streetViewControl: false, styles: mapStyler.myStyleMap }}
-                    center={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}
-                    //onLoad={onLoad}
-                    //onUnmount={onUnmount}
-                    onClick={(e) => {
-                      setLinea({ ...Linea, directionLat: e.latLng.lat(), directionLon: e.latLng.lng() });
-                      console.log(JSON.stringify(Linea))
-                    }}
-                  >
-
-                    <MarkerF position={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}> </MarkerF>
-
-                    { /* Child components, such as markers, info windows, etc. */}
-                    <></>
-                  </GoogleMap> : <>cargando...</>}
 
                 </Grid>
-
 
               </Grid>
             </Box>
@@ -620,32 +602,22 @@ const UsuariosScreen = () => {
             <Button onClick={
               (e) => {
                 handleCloseDialog();
-                if (Linea.id === ""
-                  || Linea.name === ""
-                  || Linea.phone === ""
-                  || Linea.description === ""
-                  || Linea.colorBg === ""
-                  || Linea.colorPr === ""
-                  || Linea.directionLat === ""
-                  || Linea.directionLon === "") {
+                if (!User.id
+                  || !User.name
+                  || !User.lastname
+                  || !User.phone
+                  || !User.email
+                  || !User.password
+                  || !User.roleId) {
 
                   return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
                 }
 
-                axios.put(urlApi + '/linea/' + Linea.id, Linea)
+                axios.put(urlApi + '/user/' + User.id, User)
                   .then((response) => {
                     //console.log(JSON.stringify(response));
-                    enqueueSnackbar(Linea.name + " editado con exito", { variant: 'success' });
-                    /* setLinea({
-                       id: '',
-                       name: '',
-                       description: '',
-                       directionLat: -17.783957,
-                       directionLon: -63.181132,
-                       colorBg: 'ffffff',
-                       colorPr: '3c3c3c',
-                       phone: ''
-                     })*/
+                    enqueueSnackbar(User.name + " editado con exito", { variant: 'success' });
+
                     setReload(1);
                   })
                   .catch((e) => {
@@ -688,20 +660,19 @@ const UsuariosScreen = () => {
             <Button onClick={
               (e) => {
                 handleCloseDialog();
-                if (Linea.id === ""
-                  || Linea.name === ""
-                  || Linea.phone === ""
-                  || Linea.description === ""
-                  || Linea.colorBg === ""
-                  || Linea.colorPr === ""
-                  || Linea.directionLat === ""
-                  || Linea.directionLon === "") {
+                if (!User.id
+                  || !User.name
+                  || !User.lastname
+                  || !User.phone
+                  || !User.email
+                  || !User.password
+                  || !User.roleId) {
 
                   return enqueueSnackbar("Seleccione una linea", { variant: 'error' });
                 }
 
-                axios.delete(urlApi + '/linea/' + Linea.id).then((response) => {
-                  enqueueSnackbar(Linea.name + " eliminado con exito", { variant: 'success' });
+                axios.delete(urlApi + '/user/' + User.id).then((response) => {
+                  enqueueSnackbar(User.name + " eliminado con exito", { variant: 'success' });
                   setReload(1)
                 }).catch((e) => {
                   enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' });
@@ -747,12 +718,10 @@ const UsuariosScreen = () => {
       </Menu>
 
 
+
     </Box>
 
 
 
   )
-}
-
-export default React.memo(UsuariosScreen)
-
+*/

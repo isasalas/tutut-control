@@ -1,5 +1,10 @@
 import * as React from 'react';
-import { styled, useTheme } from '@mui/material/styles';
+import PropTypes from 'prop-types';
+
+import {
+    styled,
+    useTheme
+} from '@mui/material/styles';
 import {
     Box,
     Drawer as MuiDrawer,
@@ -10,71 +15,141 @@ import {
     Typography,
     Divider,
     IconButton,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import VillaRoundedIcon from '@mui/icons-material/VillaRounded';
-import ForkRightRoundedIcon from '@mui/icons-material/ForkRightRounded';
-import SupervisedUserCircleRoundedIcon from '@mui/icons-material/SupervisedUserCircleRounded';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import DirectionsBusRoundedIcon from '@mui/icons-material/DirectionsBusRounded';
-import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
-import Forward5RoundedIcon from '@mui/icons-material/Forward5Rounded';
-import AirlineSeatReclineExtraRoundedIcon from '@mui/icons-material/AirlineSeatReclineExtraRounded';
-import { BrowserRouter, Link as RouterLink } from 'react-router-dom'
+import {
+    Menu as MenuIcon,
+    ChevronLeft as ChevronLeftIcon,
+    ChevronRight as ChevronRightIcon,
+    VillaRounded as VillaRoundedIcon,
+    ForkRightRounded as ForkRightRoundedIcon,
+    SupervisedUserCircleRounded as SupervisedUserCircleRoundedIcon,
+    HomeRounded as HomeRoundedIcon,
+    DirectionsBusRounded as DirectionsBusRoundedIcon,
+    GroupsRounded as GroupsRoundedIcon,
+    Forward5Rounded as Forward5RoundedIcon,
+    AirlineSeatReclineExtraRounded as AirlineSeatReclineExtraRoundedIcon,
+    DirectionsWalkRounded as DirectionsWalkRoundedIcon,
+    AdminPanelSettingsRounded as AdminPanelSettingsRoundedIcon,
+    PreviewRounded as PreviewRoundedIcon,
+    SecurityRounded as SecurityRoundedIcon,
+    LogoutOutlined,
+    SelectAllRounded,
+    BusAlertOutlined,
+    ExitToAppRounded,
+    ChangeCircleOutlined,
+    NumbersOutlined,
+    NumbersRounded,
+    FormatListNumberedRounded,
+    SixtyFpsRounded,
+    SupervisedUserCircleRounded,
+    ControlPointDuplicateRounded
 
-import { RoutesMyAPP } from './RoutesMyApp';
+} from '@mui/icons-material';
+
+import {
+    BrowserRouter,
+    Link as RouterLink
+} from 'react-router-dom'
+import { MyRoutes } from './myRoutes';
+import { SesionContext } from '../providers/SesionProvider';
+import { LineaContext } from '../providers/LineaProvider';
 
 
 
 const itemsList = [
-    {
+    /*{
         text: "Home",
         icon: <HomeRoundedIcon />,
         route: "/"
-    },
+    },*/
     {
         text: "Vueltas",
         icon: <Forward5RoundedIcon />,
-        route: "/vueltas"
-    },
-    {
-        text: "Internos",
-        icon: <DirectionsBusRoundedIcon />,
-        route: "/internos"
-    },
-    {
-        text: "Socios",
-        icon: <GroupsRoundedIcon />,
-        route: "/"
-    },
-    {
-        text: "Conductores",
-        icon: <AirlineSeatReclineExtraRoundedIcon />,
-        route: "/"
-    },
-    {
-        text: "Lineas",
-        icon: <VillaRoundedIcon />,
-        route: "/lineas"
+        route: "/vuelta"
     },
     {
         text: "Rutas",
         icon: <ForkRightRoundedIcon />,
-        route: "/rutas"
+        route: "/ruta"
+    },
+    {
+        text: "Internos",
+        icon: <SixtyFpsRounded />,
+        route: "/interno"
+    },
+    {
+        text: "Perfil de Linea",
+        icon: <DirectionsBusRoundedIcon />,
+        route: "/perfillinea"
+    },
+    {
+        text: "Control",
+        icon: <ControlPointDuplicateRounded />,
+        route: "/control"
     },
     {
         text: "Usuarios",
-        icon: <SupervisedUserCircleRoundedIcon />,
-        route: "/usuarios"
+        icon: <SupervisedUserCircleRounded />,
+        route: "/user"
     }
 ];
 
+const userItemsList = [
+
+
+    /*{
+        text: "Conductores",
+        icon: <AirlineSeatReclineExtraRoundedIcon />,
+        route: "/conductor"
+    },
+    {
+        text: "Socios y Conductores",
+        icon: <GroupsRoundedIcon />,
+        route: "/socio"
+    },
+    {
+        text: "Control",
+        icon: <PreviewRoundedIcon />,
+        route: "/control"
+    },*/
+
+    {
+        text: "Lineas",
+        icon: <VillaRoundedIcon />,
+        route: "/linea"
+    },
+    {
+        text: "Admins",
+        icon: <AdminPanelSettingsRoundedIcon />,
+        route: "/system"
+    }
+];
+/*
+const sesionItemsList = [
+
+
+    {
+        text: "Salir",
+        icon: <LogoutOutlined />,
+        route: "/login",
+        onClick: ({ setSesion }) => {
+            setSesion();
+        }
+    },
+    {
+        text: "Cambiar Linea",
+        icon: <LogoutOutlined />,
+        route: "/dashboard",
+        onClick: ({ setLinea }) => {
+            setLinea();
+        }
+    }
+];
+*/
 
 const drawerWidth = 240;
 
@@ -143,7 +218,12 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-export default function MiniDrawer() {
+export default function MiniDrawer(props) {
+    const Contend = props.Contend;
+    const { setSesion, sesion } = React.useContext(SesionContext)
+    const { setLinea } = React.useContext(LineaContext)
+
+
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
 
@@ -156,73 +236,180 @@ export default function MiniDrawer() {
     };
 
     return (
-        <BrowserRouter>
-            <Box sx={{ display: 'flex' }}>
-                <CssBaseline />
-                <AppBar position="fixed" open={open}>
-                    <Toolbar>
-                        <IconButton
-                            color="inherit"
-                            aria-label="open drawer"
-                            onClick={handleDrawerOpen}
-                            edge="start"
-                            sx={{
-                                marginRight: 5,
-                                ...(open && { display: 'none' }),
-                            }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography variant="h6" noWrap component="div">
-                            Mini variant drawer
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-                <Drawer variant="permanent" open={open}>
-                    <DrawerHeader>
-                        <IconButton onClick={handleDrawerClose}>
-                            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                        </IconButton>
-                    </DrawerHeader>
-                    <Divider />
-                    <List>
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <AppBar position="fixed" open={open}>
+                <Toolbar>
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        onClick={handleDrawerOpen}
+                        edge="start"
+                        sx={{
+                            marginRight: 5,
+                            ...(open && { display: 'none' }),
+                        }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Typography variant="h6" noWrap component="div">
+                        Mini variant drawer
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <Drawer variant="permanent" open={open}>
+                <DrawerHeader>
+                    <IconButton onClick={handleDrawerClose}>
+                        {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                    </IconButton>
+                </DrawerHeader>
+                <Divider />
+                <List>
 
-                        {itemsList.map((item) => (
-                            <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton component={RouterLink} to={item.route}
+                    {itemsList.map((item) => (
+                        <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                            <ListItemButton component={RouterLink} to={item.route}
+                                sx={{
+                                    minHeight: 48,
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: 2.5,
+                                }}
+                            >
+                                <ListItemIcon
                                     sx={{
-                                        minHeight: 48,
-                                        justifyContent: open ? 'initial' : 'center',
-                                        px: 2.5,
+                                        minWidth: 0,
+                                        mr: open ? 3 : 'auto',
+                                        justifyContent: 'center',
                                     }}
                                 >
-                                    <ListItemIcon
-                                        sx={{
-                                            minWidth: 0,
-                                            mr: open ? 3 : 'auto',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        {item.icon}
-                                    </ListItemIcon>
-                                    <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
-                    <Divider />
-                </Drawer>
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+                <Divider />
+                {sesion.roleId === "1" ? (
+                    <div>
+                        <List>
+                            {
 
-                <Box sx={{ flexGrow: 1, p: 3 }} >
+                                userItemsList.map((item) => (
+                                    <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                                        <ListItemButton component={RouterLink} to={item.route}
+                                            sx={{
+                                                minHeight: 48,
+                                                justifyContent: open ? 'initial' : 'center',
+                                                px: 2.5,
+                                            }}
+                                        >
+                                            <ListItemIcon
+                                                sx={{
+                                                    minWidth: 0,
+                                                    mr: open ? 3 : 'auto',
+                                                    justifyContent: 'center',
+                                                }}
+                                            >
+                                                {item.icon}
+                                            </ListItemIcon>
+                                            <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                ))
 
-                    <DrawerHeader />
+                            }
+                        </List>
+                        <Divider /></div>) : (<div />)}
+                <List>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
+                        <ListItemButton onClick={() => {
+                            setLinea();
+                        }} component={RouterLink} to="/dashboard"
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                            }}
+                        >
+                            <ListItemIcon
+                                sx={{
+                                    minWidth: 0,
+                                    mr: open ? 3 : 'auto',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <ChangeCircleOutlined />
+                            </ListItemIcon>
+                            <ListItemText primary="Cambiar Linea" sx={{ opacity: open ? 1 : 0 }} />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
+                        <ListItemButton onClick={() => {
+                            window.localStorage.removeItem('sesion');
+                            setLinea();
+                            setSesion();
 
-                    <RoutesMyAPP/>
 
-                </Box>
+                        }} component={RouterLink} to="/login"
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                            }}
+                        >
+                            <ListItemIcon
+                                sx={{
+                                    minWidth: 0,
+                                    mr: open ? 3 : 'auto',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <ExitToAppRounded />
+                            </ListItemIcon>
+                            <ListItemText primary="Cerrar Sesion" sx={{ opacity: open ? 1 : 0 }} />
+                        </ListItemButton>
+                    </ListItem>
+
+
+                    {/*sesionItemsList.map((item) => (
+                        <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
+                            <ListItemButton onClick={item.onClick({setLinea:setLinea,setSesion:setSesion})} component={RouterLink} to={item.route}
+                                sx={{
+                                    minHeight: 48,
+                                    justifyContent: open ? 'initial' : 'center',
+                                    px: 2.5,
+                                }}
+                            >
+                                <ListItemIcon
+                                    sx={{
+                                        minWidth: 0,
+                                        mr: open ? 3 : 'auto',
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))*/}
+                </List>
+            </Drawer>
+
+            <Box sx={{ flexGrow: 1, p: 3 }} >
+
+                <DrawerHeader />
+
+                {/*<MyRoutes />*/}
+                {Contend}
 
             </Box>
 
-        </BrowserRouter>
+        </Box>
+
     );
+};
+MiniDrawer.propTypes = {
+    Contend: PropTypes.object.isRequired,
 };

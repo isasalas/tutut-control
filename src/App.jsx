@@ -6,7 +6,12 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import { Box } from "@mui/material";
 import { SnackbarProvider, useSnackbar } from 'notistack';
+import { SesionProvider } from "./providers/SesionProvider";
+import { LineaProvider } from "./providers/LineaProvider";
 
+import { BrowserRouter } from "react-router-dom";
+import { MyRoutes } from "./components/myRoutes";
+import { LoadScript } from "@react-google-maps/api";
 
 
 const darkTheme = createTheme({
@@ -16,18 +21,41 @@ const darkTheme = createTheme({
 });
 
 const App = () => {
-  useEffect(() => { }, []);
-  return (
-    <SnackbarProvider maxSnack={3}>
-    <ThemeProvider theme={darkTheme}>
 
-      
-        <CssBaseline />
-        <MiniDrawer></MiniDrawer>
-    </ThemeProvider>
-</SnackbarProvider>
+
+
+  return (
+    <LoadScript googleMapsApiKey="AIzaSyBJ7gTWLlIZE3GqIuwwRV1FJnvx2AceHLM" >
+
+      <SesionProvider>
+        <LineaProvider>
+          <SnackbarProvider maxSnack={3}>
+            <ThemeProvider theme={darkTheme}>
+              <CssBaseline />
+              <BrowserRouter>
+                <MyRoutes />
+              </BrowserRouter>
+            </ThemeProvider>
+          </SnackbarProvider>
+        </LineaProvider>
+      </SesionProvider>
+    </LoadScript>
 
   )
 }
 
 export default App
+
+
+
+
+
+
+
+
+
+
+
+
+
+
