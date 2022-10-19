@@ -1,59 +1,60 @@
 import * as React from 'react';
 import axios from 'axios';
 import {
-  Divider,
-  Box,
-  Button,
-  IconButton,
-  ListItemIcon,
-  Typography,
-  ListItemText,
-  TextField,
-  MenuItem,
-  Menu,
-  Dialog,
-  DialogTitle,
-  DialogContentText,
-  DialogContent,
-  DialogActions,
-  Unstable_Grid2 as Grid
+  Divider, Box, IconButton, ListItemIcon, Typography, ListItemText, TextField, MenuItem, Menu, Unstable_Grid2 as Grid
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
   EditRounded as EditRoundedIcon,
-  SearchRounded as SearchRoundedIcon,
   MoreVertRounded as MoreVertRoundedIcon
 } from '@mui/icons-material'
-import {
-  MySvgMinibus,
-  MySvgLinea
-} from '../assets/mySvg';
+import { MySvgMinibus, MySvgLinea } from '../assets/mySvg';
 import { urlApi, urlLinea } from '../api/myApiData';
-import {
-  GoogleMap,
-  useJsApiLoader,
-  MarkerF
-} from '@react-google-maps/api';
-import {MyStyleDarkMap} from '../assets/maps/myStyleMap'
+import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { MyStyleDarkMap } from '../assets/maps/myStyleMap'
 import { MuiColorInput } from 'mui-color-input'
 import { useSnackbar } from 'notistack';
-import { LineaModelJson, LineaModel } from '../models/models';
 import { MySearchName } from '../components/MySearch';
 import { MyBanner } from '../components/myBanner';
 import MiniDrawer from '../components/mydrawer';
+import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
 
+const lineaModel={
+  name: null,
+  description: null,
+  direction: { lat: -17.783957, lng: -63.181132 },
+  color: { top: 'ffffff', bottom: '3c3c3c' },
+  phone: null,
+  ida: {
+      origin: {
+          location: { lat: -17.792102, lng: -63.178993 },
+          time: 0
+      },
+      destination: {
+          location: { lat: -17.774608, lng: -63.182515 },
+          time: 0
+      },
+      waypoint: []
+  },
+  vuelta: {
+    origin: {
+        location: { lat: -17.774608, lng: -63.182515 },
+        time: 0
+    },
+    destination: {
+        location: { lat: -17.792102, lng: -63.178993 },
+        time: 0
+    },
+    waypoint: [ ]
+},
 
+}
 
 const LineaScreen = () => {
 
   const [Lineas, setLineas] = React.useState(Array);
   const [anchorElMenu, setAnchorElMenu] = React.useState(null);
-  const [Linea, setLinea] = React.useState(LineaModelJson);
-
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyBJ7gTWLlIZE3GqIuwwRV1FJnvx2AceHLM"
-  })
+  const [Linea, setLinea] = React.useState(lineaModel);
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -64,21 +65,15 @@ const LineaScreen = () => {
 
 
   const [scrollDialog, setScrollDialog] = React.useState('paper');
-  const [reload, setReload] = React.useState();
 
 
   const handleClickOpenDialogCreate = (scrollType) => () => {
-    setLinea(LineaModelJson);
     setOpenDialogCreate(true);
     setScrollDialog(scrollType);
   };
-  /*
-    const handleClickOpenDialogEdit = (scrollType) => () => {
-      setOpenDialogEdit(true);
-      setScrollDialog(scrollType);
-    };*/
 
   const handleCloseDialog = () => {
+    setLinea(lineaModel);
     setOpenDialogCreate(false);
     setOpenDialogEdit(false);
     setOpenDialogDelete(false);
@@ -90,42 +85,67 @@ const LineaScreen = () => {
 
 
   React.useEffect(() => {
-    axios.get(urlApi + '/linea').then((response) => {
+    axios.get(urlApi + urlLinea).then((response) => {
       setLineas(response.data);
     });
     if (openDialogCreate || openDialogEdit || openDialogDelete) {
       const { current: descriptionElement } = descriptionElementRef;
-      if (descriptionElement !== null) {
-        descriptionElement.focus();
-      }
+      if (descriptionElement !== null) { descriptionElement.focus(); }
     }
-
-  }, [openDialogCreate, openDialogDelete, openDialogEdit, reload]);
+  }, [openDialogCreate, openDialogDelete, openDialogEdit]);
 
   if (!Lineas) return null;
-
 
   const openMenu = Boolean(anchorElMenu);
 
   const handleClickMenu = ({ linea, event }) => {
     setAnchorElMenu(event.currentTarget);
     setLinea(linea);
-
-
   };
+
   const handleCloseMenu = () => {
     setAnchorElMenu(null);
-
-    console.log(JSON.stringify(Linea))
-
   };
 
+  const deleteLinea = (e) => {
+    if (Linea.id === "") { return enqueueSnackbar("Seleccione una linea", { variant: 'error' }); }
 
+    axios.delete(urlApi + urlLinea + '/' + Linea.id)
+      .then((response) => { enqueueSnackbar(Linea.name + " eliminado con exito", { variant: 'success' }); })
+      .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
+    handleCloseDialog();
+  }
 
+  const editLinea = (e) => {
 
+    if (!Linea.id || !Linea.name || !Linea.phone || !Linea.color.bottom || !Linea.color.top || !Linea.direction.lat || !Linea.direction.lng) {
+      return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
+    }
+
+    axios.put(urlApi + urlLinea + '/' + Linea.id, Linea)
+      .then((response) => { enqueueSnackbar(Linea.name + " editado con exito", { variant: 'success' }); })
+      .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
+    handleCloseDialog();
+  }
+
+  const createLinea = (e) => {
+    if (!Linea.name
+      || !Linea.phone
+      || !Linea.color.bottom
+      || !Linea.color.top
+      || !Linea.direction.lat
+      || !Linea.direction.lng) {
+      return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
+    }
+
+    axios.post(urlApi + urlLinea, Linea)
+      .then((response) => {
+        enqueueSnackbar(Linea.name + " creado con exito", { variant: 'success' }); 
+        handleCloseDialog();
+      }).catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
+  }
 
   return (
-
     <MiniDrawer Contend={
       <Box>
         <MyBanner
@@ -148,7 +168,6 @@ const LineaScreen = () => {
           }).map((linea) => (
             <Grid container
               key={linea.id}
-              //display="flex"
               justifyContent="space-between"
               alignItems="center"
               columnSpacing={2}
@@ -157,8 +176,8 @@ const LineaScreen = () => {
               <Grid xs={3} style={{ maxHeight: '50px', paddingLeft: '15px' }}>
                 <MySvgMinibus
                   style={{ maxHeight: '50px' }}
-                  colorpr={linea.colorPr}
-                  colorbg={linea.colorBg} />
+                  top={linea.color.top}
+                  bottom={linea.color.bottom} />
               </Grid>
 
               <Grid xs={8}>
@@ -183,582 +202,130 @@ const LineaScreen = () => {
           ))}
         </Grid>
 
-        <div>
 
-
-
-          <Dialog
-            open={openDialogCreate}
-            onClose={handleCloseDialog}
-            scroll={scrollDialog}
-            aria-labelledby="scroll-dialog-title"
-            aria-describedby="scroll-dialog-description"
-          >
-            <DialogTitle id="scroll-dialog-title">
-              Crear Nueva Linea
-            </DialogTitle>
-            <DialogContent dividers={scrollDialog === 'paper'}>
-
-              <Box >
-                <Grid container
-                  paddingBottom={1}
-                  paddingTop={1}
-                  direction="row"
-                  justifyContent="space-evenly"
-                  alignItems="center"
-                  columnSpacing={2}
-                  rowSpacing={2}>
-
-
-
-                  <Grid container xs={12} sm={6} >
-                    <Grid xs={12}>
-                      <div style={{ fontSize: '15px' }} >
-                        Introduce el id, nombre, telefono, descripticion, colores y direccion de la nueva linea
-                      </div>
-                    </Grid>
-
-                    
-                    <Grid xs={6} >
-                      <TextField
-                        fullWidth
-                        label="Nombre"
-                        value={Linea.name}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, name: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid xs={6} >
-                      <TextField
-                        fullWidth
-                        label="Telefono"
-                        value={Linea.phone}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, phone: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid xs={12}>
-                      <TextField
-                        required
-                        fullWidth
-                        multiline
-                        label="Descripción"
-                        value={Linea.description}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, description: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid container
-                      justifyContent="space-evenly"
-                      alignItems="center"
-                      xs={6} sm={6}
-                      maxWidth={200} >
-                      <Grid xs={12} >
-                        <MySvgMinibus colorbg={Linea.colorBg} colorpr={Linea.colorPr} />
-                      </Grid>
-                    </Grid>
-
-                    <Grid container xs={6} >
-                      <Grid xs={12} >
-                        <MuiColorInput
-                          label="Color Superior"
-                          variant="standard"
-                          format="hex"
-                          fullWidth
-                          value={'#' + Linea.colorBg}
-                          onChange={(color, colors) => {
-                            setLinea({ ...Linea, colorBg: colors.hex.slice(1) });
-                          }} /></Grid>
-                      <Grid xs={12} >
-                        <MuiColorInput
-                          label="Color Inferior"
-                          variant="standard"
-                          format="hex"
-                          fullWidth
-                          value={'#' + Linea.colorPr}
-                          onChange={(color, colors) => {
-                            setLinea({ ...Linea, colorPr: colors.hex.slice(1) });
-                          }} /></Grid>
-
+        <MyDialogCreate Title='Crear Nuevo Interno' Description='Introduce el id, nombre, telefono, descripticion, colores y direccion de la nueva linea' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createLinea}
+          Conten={
+            <Box >
+              <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
+                <Grid container xs={12} sm={6} >
+                  <Grid xs={6} >
+                    <TextField fullWidth label="Nombre" variant="standard" value={Linea.name} onChange={e => setLinea({ ...Linea, name: e.target.value })} />
+                  </Grid>
+                  <Grid xs={6} >
+                    <TextField fullWidth label="Telefono" variant="standard" value={Linea.phone} onChange={e => setLinea({ ...Linea, phone: e.target.value })} />
+                  </Grid>
+                  <Grid container justifyContent="space-evenly" alignItems="center" xs={6} sm={6} maxWidth={200} >
+                    <Grid xs={12} >
+                      <MySvgMinibus bottom={Linea.color.bottom} top={Linea.color.top} />
                     </Grid>
                   </Grid>
 
-                  <Grid xs={12} sm={6} >
-                    direccion:
-                    {isLoaded ? <GoogleMap
-
-                      mapContainerStyle={{
-
-                        width: '100%',
-                        height: '300px'
-                      }}
-                      zoom={15}
-                      options={{ mapTypeControl: false, streetViewControl: false, styles: MyStyleDarkMap }}
-                      center={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}
-                      //onLoad={onLoad}
-                      //onUnmount={onUnmount}
-                      onClick={(e) => {
-                        setLinea({ ...Linea, directionLat: e.latLng.lat(), directionLon: e.latLng.lng() });
-                        console.log(JSON.stringify(Linea))
-                      }}
-                    >
-
-                      <MarkerF position={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}> </MarkerF>
-
-                      { /* Child components, such as markers, info windows, etc. */}
-                      <></>
-                    </GoogleMap> : <>cargando...</>}
-
+                  <Grid container xs={6} >
+                    <Grid xs={12} >
+                      <MuiColorInput fullWidth label="Color Superior" variant="standard" format="hex" value={'#' + Linea.color.bottom}
+                        onChange={(color, colors) => {
+                          setLinea({ ...Linea, color: { top: Linea.color.top, bottom: colors.hex.slice(1) } });
+                        }} /></Grid>
+                    <Grid xs={12} >
+                      <MuiColorInput fullWidth label="Color Inferior" variant="standard" format="hex" value={'#' + Linea.color.top}
+                        onChange={(color, colors) => {
+                          setLinea({ ...Linea, color: { top: colors.hex.slice(1), bottom: Linea.color.bottom } });
+                        }} /></Grid>
                   </Grid>
-
-
                 </Grid>
-              </Box>
 
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={
-                handleCloseDialog}>Cancelar</Button>
-              <Button onClick={
-                (e) => {
-                  if (!Linea.name
-                    || !Linea.phone
-                    || !Linea.description
-                    || !Linea.colorBg
-                    || !Linea.colorPr
-                    || !Linea.directionLat
-                    || !Linea.directionLon) {
-                    return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
-                  }
-
-                  axios.post(urlApi + urlLinea, Linea)
-                    .then((response) => {
-                      //console.log(JSON.stringify(response));
-                      handleCloseDialog();
-                      enqueueSnackbar(Linea.name + " creado con exito", { variant: 'success' });
-                      setLinea(LineaModelJson)
-                    })
-                    .catch((e) => {
-                      enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' });
-                    });
-
-
-                }
-              }>Crear Linea</Button>
-            </DialogActions>
-          </Dialog>
-        </div>
-
-
-        <div>
-          <Dialog
-            open={openDialogEdit}
-            onClose={handleCloseDialog}
-            scroll={scrollDialog}
-            aria-labelledby="scroll-dialog-title"
-            aria-describedby="scroll-dialog-description"
-          >
-            <DialogTitle id="scroll-dialog-title">
-              Editar Linea
-            </DialogTitle>
-            <DialogContent dividers={scrollDialog === 'paper'}>
-
-              <Box >
-                <Grid container
-                  paddingBottom={1}
-                  paddingTop={1}
-                  direction="row"
-                  justifyContent="space-evenly"
-                  alignItems="center"
-                  columnSpacing={2}
-                  rowSpacing={2}>
-
-                  <Grid container xs={12} sm={6} >
-                    <Grid xs={12}>
-                      <div style={{ fontSize: '15px' }} >
-                        Edita el id, nombre, telefono, descripticion, colores y direccion de la nueva linea
-                      </div>
-                    </Grid>
-
-                    <Grid xs={4} >
-                      <TextField
-                        fullWidth
-                        disabled
-                        label="Id"
-                        value={Linea.id}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, id: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid xs={8} >
-                      <TextField
-                        fullWidth
-                        label="Nombre"
-                        value={Linea.name}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, name: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Telefono"
-                        value={Linea.phone}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, phone: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid xs={12}>
-                      <TextField
-                        required
-                        fullWidth
-                        multiline
-                        label="Descripción"
-                        value={Linea.description}
-                        onChange={(event) => {
-                          setLinea({ ...Linea, description: event.target.value });
-                        }}
-                        name="numberformat"
-                        id="formatted-numberformat-input"
-                        variant="standard"
-                      />
-                    </Grid>
-                    <Grid container
-                      justifyContent="space-evenly"
-                      alignItems="center"
-                      xs={6} sm={6}
-                      maxWidth={200} >
-                      <Grid xs={12} >
-                        <MySvgMinibus colorbg={Linea.colorBg} colorpr={Linea.colorPr} />
-                      </Grid>
-                    </Grid>
-
-                    <Grid container xs={6} >
-                      <Grid xs={12} >
-                        <MuiColorInput
-                          label="Color Superior"
-                          variant="standard"
-                          format="hex"
-                          fullWidth
-                          value={'#' + Linea.colorBg}
-                          onChange={(color, colors) => {
-                            setLinea({ ...Linea, colorBg: colors.hex.slice(1) });
-                          }} /></Grid>
-                      <Grid xs={12} >
-                        <MuiColorInput
-                          label="Color Inferior"
-                          variant="standard"
-                          format="hex"
-                          fullWidth
-                          value={'#' + Linea.colorPr}
-                          onChange={(color, colors) => {
-                            setLinea({ ...Linea, colorPr: colors.hex.slice(1) });
-                          }} /></Grid>
-
-                    </Grid>
-                  </Grid>
-
-                  <Grid xs={12} sm={6} >
-                    direccion:
-                    {isLoaded ? <GoogleMap
-
-                      mapContainerStyle={{
-
-                        width: '100%',
-                        height: '300px'
-                      }}
-                      zoom={15}
-                      options={{ mapTypeControl: false, streetViewControl: false, styles: MyStyleDarkMap }}
-                      center={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}
-                      //onLoad={onLoad}
-                      //onUnmount={onUnmount}
-                      onClick={(e) => {
-                        setLinea({ ...Linea, directionLat: e.latLng.lat(), directionLon: e.latLng.lng() });
-                        console.log(JSON.stringify(Linea))
-                      }}
-                    >
-
-                      <MarkerF position={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}> </MarkerF>
-
-                      { /* Child components, such as markers, info windows, etc. */}
-                      <></>
-                    </GoogleMap> : <>cargando...</>}
-
-                  </Grid>
-
-
+                <Grid xs={12} sm={6} >
+                  direccion:
+                  <GoogleMap
+                    mapContainerStyle={{ width: '100%', height: '300px' }}
+                    zoom={15}
+                    options={{ mapTypeControl: false, streetViewControl: false, styles: MyStyleDarkMap }}
+                    center={{ lat: Number.parseFloat(Linea.direction.lat), lng: Number.parseFloat(Linea.direction.lng) }}
+                    onClick={(e) => {
+                      setLinea({ ...Linea, direction: { lat: e.latLng.lat(), lng: e.latLng.lng() } });
+                      console.log(JSON.stringify(Linea))
+                    }}
+                  >
+                    <MarkerF position={{ lat: Number.parseFloat(Linea.direction.lat), lng: Number.parseFloat(Linea.direction.lng) }}> </MarkerF>
+                  </GoogleMap>
                 </Grid>
-              </Box>
+              </Grid>
+            </Box>
+          } />
 
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={
-                handleCloseDialog}>Cancelar</Button>
-              <Button onClick={
-                (e) => {
-                  handleCloseDialog();
-                  if (!Linea.id
-                    || !Linea.name
-                    || !Linea.phone
-                    || !Linea.description
-                    || !Linea.colorBg
-                    || !Linea.colorPr
-                    || !Linea.directionLat
-                    || !Linea.directionLon) {
+        <MyDialogEdit Title='title' Description='Edita el id, nombre, telefono, descripticion, colores y direccion de la nueva linea' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editLinea}
+          Conten={
+            <Box >
+              <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
+                <Grid container xs={12} sm={6} >
+                  <Grid xs={4} >
+                    <TextField fullWidth disabled label="Id" variant="standard" value={Linea.id} onChange={e => setLinea({ ...Linea, id: e.target.value })} />
+                  </Grid>
+                  <Grid xs={8} >
+                    <TextField fullWidth label="Nombre" variant="standard" value={Linea.name} onChange={e => setLinea({ ...Linea, name: e.target.value })} />
+                  </Grid>
+                  <Grid xs={12}>
+                    <TextField fullWidth label="Telefono" variant="standard" value={Linea.phone} onChange={e => setLinea({ ...Linea, phone: e.target.value })} />
+                  </Grid>
+                  <Grid container justifyContent="space-evenly" alignItems="center" xs={6} sm={6} maxWidth={200} >
+                    <Grid xs={12} >
+                      <MySvgMinibus bottom={Linea.color.bottom} top={Linea.color.top} />
+                    </Grid>
+                  </Grid>
+                  <Grid container xs={6} >
+                    <Grid xs={12} >
+                      <MuiColorInput fullWidth label="Color Superior" variant="standard" format="hex" value={'#' + Linea.color.bottom}
+                        onChange={(color, colors) => {
+                          setLinea({ ...Linea, color: { top: Linea.color.top, bottom: colors.hex.slice(1) } });
+                        }} /></Grid>
+                    <Grid xs={12} >
+                      <MuiColorInput fullWidth label="Color Inferior" variant="standard" format="hex" value={'#' + Linea.color.top}
+                        onChange={(color, colors) => {
+                          setLinea({ ...Linea, color: { top: colors.hex.slice(1), bottom: Linea.color.bottom } });
+                        }} /></Grid>
+                  </Grid>
+                </Grid>
 
-                    return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
-                  }
+                <Grid xs={12} sm={6} >
+                  direccion:
+                  <GoogleMap
+                    mapContainerStyle={{ width: '100%', height: '300px' }}
+                    zoom={15}
+                    options={{ mapTypeControl: false, streetViewControl: false, styles: MyStyleDarkMap }}
+                    center={{ lat: Number.parseFloat(Linea.direction.lat), lng: Number.parseFloat(Linea.direction.lng) }}
+                    onClick={(e) => {
+                      setLinea({ ...Linea, direction: { lat: e.latLng.lat(), lng: e.latLng.lng() } });
+                      console.log(JSON.stringify(Linea))
+                    }}
+                  >
+                    <MarkerF position={{ lat: Number.parseFloat(Linea.direction.lat), lng: Number.parseFloat(Linea.direction.lng) }}> </MarkerF>
+                  </GoogleMap>
+                </Grid>
+              </Grid>
+            </Box>
+          } />
 
-                  axios.put(urlApi + '/linea/' + Linea.id, Linea)
-                    .then((response) => {
-                      //console.log(JSON.stringify(response));
-                      enqueueSnackbar(Linea.name + " editado con exito", { variant: 'success' });
-                      /* setLinea({
-                         id: '',
-                         name: '',
-                         description: '',
-                         directionLat: -17.783957,
-                         directionLon: -63.181132,
-                         colorBg: 'ffffff',
-                         colorPr: '3c3c3c',
-                         phone: ''
-                       })*/
-                      setReload(1);
-                    })
-                    .catch((e) => {
-                      enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' });
-
-                    });
-
-
-                }
-              }>Editar Linea</Button>
-            </DialogActions>
-          </Dialog>
-        </div>
-
-        <div>
-          <Dialog
-            open={openDialogDelete}
-            onClose={handleCloseDialog}
-            scroll={scrollDialog}
-            aria-labelledby="scroll-dialog-title"
-            aria-describedby="scroll-dialog-description"
-          >
-            <DialogTitle id="scroll-dialog-title">
-              Eliminar Linea
-            </DialogTitle>
-            <DialogContent dividers={scrollDialog === 'paper'}>
-
-              <DialogContentText
-                id="scroll-dialog-description"
-                ref={descriptionElementRef}
-                tabIndex={-1}
-              >
-                Esta seguro de eliminar la Linea?
-              </DialogContentText>
-
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={
-                handleCloseDialog}>Cancelar</Button>
-              <Button onClick={
-                (e) => {
-                  handleCloseDialog();
-                  if (Linea.id === ""
-                    || Linea.name === ""
-                    || Linea.phone === ""
-                    || Linea.description === ""
-                    || Linea.colorBg === ""
-                    || Linea.colorPr === ""
-                    || Linea.directionLat === ""
-                    || Linea.directionLon === "") {
-
-                    return enqueueSnackbar("Seleccione una linea", { variant: 'error' });
-                  }
-
-                  axios.delete(urlApi + '/linea/' + Linea.id).then((response) => {
-                    enqueueSnackbar(Linea.name + " eliminado con exito", { variant: 'success' });
-                    setReload(1)
-                  }).catch((e) => {
-                    enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' });
-                  });
-
-
-                }
-              }>Eliminar Linea</Button>
-            </DialogActions>
-          </Dialog>
-        </div>
-
+        <MyDialogDelete Title='Eliminar Linea' Description='Esta seguro de eliminar la Linea?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteLinea} />
 
         <Menu
           anchorEl={anchorElMenu}
           open={openMenu}
           onClose={handleCloseMenu}>
-          <MenuItem onClick={(e) => {
-
-            setOpenDialogEdit(true);
-            setScrollDialog('paper');
-            //handleClickOpenDialogEdit('paper');
-            setAnchorElMenu(null);
-
-          }}>
+          <MenuItem onClick={(e) => { setOpenDialogEdit(true); setScrollDialog('paper'); setAnchorElMenu(null); }}>
             <ListItemIcon>
               <EditRoundedIcon fontSize="small" />
             </ListItemIcon>
             <Typography variant="inherit">Editar</Typography>
           </MenuItem>
-          <MenuItem onClick={(e) => {
-            setOpenDialogDelete(true);
-            setScrollDialog('paper');
-
-            setAnchorElMenu(null);
-
-          }}>
+          <MenuItem onClick={(e) => { setOpenDialogDelete(true); setScrollDialog('paper'); setAnchorElMenu(null); }}>
             <ListItemIcon>
               <DeleteIcon fontSize="small" />
             </ListItemIcon>
             <Typography variant="inherit" noWrap> Eliminar </Typography>
           </MenuItem>
         </Menu>
-
-
       </Box>
     }></MiniDrawer>
-
-
-
-
   )
 }
-
 export default LineaScreen
-
-/*
-
-{Lineas.map((linea) => (
-          
-
-          <MySvgMinibus style={{ maxHeight: '50px', backgroundColor: '#c5c5c5' }} colorpr={linea.colorPr} colorbg={linea.colorBg} >
-
-          </MySvgMinibus>
-
-    ))}
-
-
-
-
-<List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-        {
-          Lineas.map((linea) => (
-
-            
-            //console.log( linea.name),
-            <div key={linea.id} >
-            
-              <ListItem alignItems="center">
-                <MySvgMinibus height={50}  ></MySvgMinibus>
-                
-                <ListItemText
-                  primary={linea.name}
-                  secondary={
-
-                    <React.Fragment>
-                      <Typography
-                        sx={{ display: 'inline' }}
-                        component="span"
-                        variant="body2"
-                        color="text.primary"
-                      >
-                        {linea.id}
-                      </Typography>
-                      <br ></br>
-                      {linea.description}
-                    </React.Fragment>
-                  }
-                />
-                <IconButton aria-label="comment">
-                  <MoreVertRoundedIcon />
-                </IconButton>
-              </ListItem>
-              <Divider variant="inset" component="li" />
-            </div>
-
-          ))}
-      </List>
-*/
-
-/*
-<List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-        {
-          Lineas.map((linea) => (
-
-            
-            //console.log( linea.name),
-            <div key={linea.id} >
-            
-              <ListItem alignItems="center">
-                <MySvgMinibus height={50}  ></MySvgMinibus>
-                
-                <ListItemText
-                  primary={linea.name}
-                  secondary={
-
-                    <React.Fragment>
-                      <Typography
-                        sx={{ display: 'inline' }}
-                        component="span"
-                        variant="body2"
-                        color="text.primary"
-                      >
-                        {linea.id}
-                      </Typography>
-                      <br ></br>
-                      {linea.description}
-                    </React.Fragment>
-                  }
-                />
-                <IconButton aria-label="comment">
-                  <MoreVertRoundedIcon />
-                </IconButton>
-              </ListItem>
-              <Divider variant="inset" component="li" />
-            </div>
-
-          ))}
-      </List>
-*/
-
-
-
-
-
-
-

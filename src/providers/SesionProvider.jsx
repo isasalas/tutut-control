@@ -1,5 +1,4 @@
 import React, { createContext } from 'react'
-import { LineaModelJson, UserModelJson } from '../models/models';
 
 export const SesionContext= createContext();
 

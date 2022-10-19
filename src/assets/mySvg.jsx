@@ -109,10 +109,10 @@ function shadeColor1(color, percent) {
 
 export const MySvgMinibus = (props) => {
 
-    const colorPr = props.colorpr;
-    const colorBg = props.colorbg;
-    const colorPrSombra = shadeColor1(colorPr, -10);
-    const colorBgSombra = shadeColor1(colorBg, -10);
+    const top = props.top;
+    const bottom = props.bottom;
+    const topSombra = shadeColor1(top, -10);
+    const bottomSombra = shadeColor1(bottom, -10);
 
 
 
@@ -134,22 +134,22 @@ export const MySvgMinibus = (props) => {
         />
         <path
             d="m487.605 250.113-17.921-61.949a80.308 80.308 0 0 0-37.008-47.234L194.777 3.773c-8.226-4.746-17.707-4.082-24.957.375L35.121 82.016c-6.45 3.222-11.508 9.27-13.023 17.183L8.895 167.95v96.93a28.553 28.553 0 0 0 14.34 24.766l340.417 195.453v-66.934c0-7.8-.289-15.594-.855-23.363 22.86-12.98 51.71-8.02 68.922 11.851l9.617 11.106 10.055-39.387a102.985 102.985 0 0 1 47.894-63.488c-1.672-21.91-5.562-43.617-11.68-64.77zm0 0"
-            fill={"#" + colorPrSombra}
+            fill={"#" + topSombra}
             data-original="#2eb3bd"
         />
         <path
             d="M499.285 314.883a102.985 102.985 0 0 0-47.894 63.488l-10.055 39.387-9.617-11.106c-17.211-19.87-46.063-24.832-68.922-11.851.566 7.77.855 15.562.855 23.363v66.934l47.582-13.41a156.947 156.947 0 0 0 89.004-65.508v-56.883c0-9.035-.664-24.125-.953-34.414zm0 0"
-            fill={"#" + colorPr}
+            fill={"#" + top}
             data-original="#72e8f1"
         />
         <path
             d="m351.02 329.031-17.922-61.949a80.297 80.297 0 0 0-37.008-47.234L58.19 82.69c-14.507-8.37-32.937.059-36.097 16.508l-13.2 68.75 259.977 150.207a379.678 379.678 0 0 1 93.914 76.649 320.523 320.523 0 0 0-11.765-65.774zm0 0"
-            fill={"#" + colorBgSombra}
+            fill={"#" + bottomSombra}
             data-original="#cecece"
         />
         <path
             d="m487.605 250.113-17.921-61.949a80.308 80.308 0 0 0-37.008-47.234L194.777 3.773c-8.226-4.746-17.707-4.082-24.957.375L35.125 82.012c6.957-3.477 15.54-3.664 23.066.68L296.09 219.843a80.305 80.305 0 0 1 37.008 47.238l17.922 61.95a320.793 320.793 0 0 1 11.77 65.773c22.862-12.989 51.714-8.028 68.929 11.847l9.617 11.102 10.055-39.387a102.977 102.977 0 0 1 47.894-63.484c-1.672-21.91-5.562-43.617-11.68-64.77zm0 0"
-            fill={"#" + colorBg}
+            fill={"#" + bottom}
             data-original="#ededed"
         />
         <path
@@ -215,14 +215,14 @@ export const MySvgMinibus = (props) => {
         />
         <path
             d="m72.492 269.64-44.25-25.546v-39.516l44.25 25.547zm0 0"
-            fill={"#" + colorBgSombra}
+            fill={"#" + bottomSombra}
             data-original="#0c929c"
         />
     </svg>
 }
 MySvgMinibus.propTypes = {
-    colorpr: PropTypes.string.isRequired,
-    colorbg: PropTypes.string.isRequired,
+    top: PropTypes.string.isRequired,
+    bottom: PropTypes.string.isRequired,
 };
 
 

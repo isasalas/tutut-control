@@ -1,99 +1,138 @@
-
 import * as React from 'react';
-import PropTypes from 'prop-types';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import { useDemoData } from '@mui/x-data-grid-generator';
+import axios from 'axios';
+import { Box, Unstable_Grid2 as Grid2 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import MiniDrawer from '../components/mydrawer';
-import { SesionContext } from '../providers/SesionProvider';
-import { GoogleMap, MarkerF, useJsApiLoader } from '@react-google-maps/api';
-import { Unstable_Grid2 as Grid } from '@mui/material';
-import { LineaModelJson } from '../models/models';
-import { MyStyleDarkMap } from '../assets/maps/myStyleMap';
 
-/*
-function CustomFooterStatusComponent(props) {
-  return (
-    <Box sx={{ p: 1, display: 'flex' }}>
-      <FiberManualRecordIcon
-        fontSize="small"
-        sx={{
-          mr: 1,
-          color: props.status === 'connected' ? '#4caf50' : '#d9182e',
-        }}
-      />
-      Status {props.status}
-    </Box>
-  );
+import { GoogleMap } from '@react-google-maps/api';
+
+let dirSerIda, dirRenIda, dirSerVuelta, dirRenVuelta;
+
+const defaultLocation = { lat: -17.783598, lng: -63.180524 };
+let destinationInit = { lat: -17.774608, lng: -63.182515 };
+let originInit = { lat: -17.792102, lng: -63.178993 };
+ 
+const VueltaScreen = () => {
+  const [wpIda, setWpIda] = React.useState({
+    directions: null,
+    bounds: null,
+  })
+
+  const [wpVuelta, setWpVuelta] = React.useState({
+    directions: null,
+    bounds: null,
+  })
+
+  const [originIda, setOriginIda] = React.useState({
+    lat: null,
+    lon: null,
+  })
+
+  const [originVuelta, setOriginVuelta] = React.useState({
+    lat: null,
+    lon: null,
+  })
+
+  function initMap({ map, dirSer, dirRen, setDir, dir }) {
+    dirSer = new window.google.maps.DirectionsService();
+    dirRen = new window.google.maps.DirectionsRenderer({
+      draggable: true,
+      map: map,
+    });
+
+    dirRen.addListener("directions_changed", function () {
+
+      var directions = dirRen.getDirections();
+      if (directions) {
+        console.log(directions.geocoded_waypoints)
+        console.log(directions.routes[0].legs)
+
+
+        setDir(directions);
+       /* const route = []
+        directions.routes[0].overview_path.map((e) => {
+          route.push(e.toJSON())
+        })
+        directions.routes[0].legs.map((e) => {
+          console.log(e.steps)
+        });*/
+      }
+    });
+
+    if (dir.directions == null) {
+      //console.log('recargo')
+      displayRoute(originInit, destinationInit, dirSer, dirRen);
+    }
+  }
+
+  function computeTotalDistance(result) {
+    var total = 0;
+    var myroute = result.routes[0];
+    if (!myroute) {
+        return;
+    }
+    for (var i = 0; i < myroute.legs.length; i++) {
+        total += myroute.legs[i].distance.value;
+    }
+    total = total / 1000;
+    document.getElementById("total").innerHTML = total + " km";
 }
 
-CustomFooterStatusComponent.propTypes = {
-  status: PropTypes.oneOf(['connected', 'disconnected']).isRequired,
-};
+  function displayRoute(origin, destination, dirSer, dirRen) {
+    dirSer
+      .route({
+        origin: origin,
+        destination: destination,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+        waypoints: [
+          {
+            location: { lat: -17.783598, lng: -63.180524 },
+            stopover: false,
+          }
+        ],
+      })
+      .then(function (result) {
+        dirRen.setDirections(result);
+      })
+      .catch(function (e) {
+        alert("Could not display directions due to: " + e);
+      });
+  }
 
-export { CustomFooterStatusComponent };
-*/
+  function initMapIda(map) {
+    initMap({ map: map, dirRen: dirRenIda, dirSer: dirSerIda, setDir: setWpIda, dir: wpIda })
+  }
 
-
-const VueltaScreen = () => {
-  const [Linea, setLinea] = React.useState(LineaModelJson);
-
-  const [status, setStatus] = React.useState('connected');
-  const { data } = useDemoData({
-    dataSet: 'Employee',
-    rowLength: 4,
-    maxColumns: 6,
-  });
-
-  const { setSesion } = React.useContext(SesionContext)
-
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyBJ7gTWLlIZE3GqIuwwRV1FJnvx2AceHLM"
-  })
+  function initMapVuelta(map) {
+    initMap({ map: map, dirRen: dirRenVuelta, dirSer: dirSerVuelta, setDir: setWpVuelta, dir: wpVuelta })
+  }
 
   return (
     <MiniDrawer Contend={
-
-      <Box sx={{ width: '100%' }}>
-        <Box sx={{ height: 350, width: '100%', mb: 1 }}>
-
-          <Grid xs={12} sm={6} >
-            direccion:
-            {isLoaded ? <GoogleMap
-
-              mapContainerStyle={{
-
-                width: '100%',
-                height: '300px'
-              }}
-              zoom={15}
-              options={{ mapTypeControl: false, streetViewControl: false, styles: MyStyleDarkMap }}
-              center={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}
-              //onLoad={onLoad}
-              //onUnmount={onUnmount}
-              onClick={(e) => {
-                setLinea({ ...Linea, directionLat: e.latLng.lat(), directionLon: e.latLng.lng() });
-                console.log(JSON.stringify(Linea))
-              }}
+      <Box >
+        <Grid2 container columnSpacing={2} rowSpacing={2}>
+          <Grid2 xs={12} sm={6}>
+            <GoogleMap
+              center={defaultLocation}
+              zoom={14}
+              onLoad={(map) => initMapIda(map)}
+              mapContainerStyle={{ height: '400px', width: '100%' }}
             >
-
-              <MarkerF position={{ lat: Number.parseFloat(Linea.directionLat), lng: Number.parseFloat(Linea.directionLon) }}> </MarkerF>
-
-              { /* Child components, such as markers, info windows, etc. */}
-              <></>
-            </GoogleMap> : <>cargando...</>}
-
-          </Grid>
-        </Box>
-
+            </GoogleMap>
+          </Grid2>
+          <Grid2 xs={12} sm={6}>
+            <GoogleMap
+              center={defaultLocation}
+              zoom={14}
+              onLoad={(map) => initMapVuelta(map)}
+              mapContainerStyle={{ height: '400px', width: '100%' }}
+            >
+            </GoogleMap>
+          </Grid2>
+        </Grid2>
       </Box>
-    }></MiniDrawer>
-  );
+    } />
+  )
 }
 
 export default VueltaScreen
-
-

@@ -26,46 +26,24 @@ import {
     ChevronRight as ChevronRightIcon,
     VillaRounded as VillaRoundedIcon,
     ForkRightRounded as ForkRightRoundedIcon,
-    SupervisedUserCircleRounded as SupervisedUserCircleRoundedIcon,
-    HomeRounded as HomeRoundedIcon,
     DirectionsBusRounded as DirectionsBusRoundedIcon,
-    GroupsRounded as GroupsRoundedIcon,
     Forward5Rounded as Forward5RoundedIcon,
-    AirlineSeatReclineExtraRounded as AirlineSeatReclineExtraRoundedIcon,
-    DirectionsWalkRounded as DirectionsWalkRoundedIcon,
     AdminPanelSettingsRounded as AdminPanelSettingsRoundedIcon,
-    PreviewRounded as PreviewRoundedIcon,
-    SecurityRounded as SecurityRoundedIcon,
-    LogoutOutlined,
-    SelectAllRounded,
-    BusAlertOutlined,
     ExitToAppRounded,
-    ChangeCircleOutlined,
-    NumbersOutlined,
-    NumbersRounded,
-    FormatListNumberedRounded,
     SixtyFpsRounded,
     SupervisedUserCircleRounded,
-    ControlPointDuplicateRounded
-
+    ControlPointDuplicateRounded,
+    EditOffRounded,
+    ChangeCircleRounded
 } from '@mui/icons-material';
 
-import {
-    BrowserRouter,
-    Link as RouterLink
-} from 'react-router-dom'
-import { MyRoutes } from './myRoutes';
+import { Link as RouterLink } from 'react-router-dom'
 import { SesionContext } from '../providers/SesionProvider';
-import { LineaContext } from '../providers/LineaProvider';
-
+import axios from 'axios';
+import { urlApi, urlLinea } from '../api/myApiData';
 
 
 const itemsList = [
-    /*{
-        text: "Home",
-        icon: <HomeRoundedIcon />,
-        route: "/"
-    },*/
     {
         text: "Vueltas",
         icon: <Forward5RoundedIcon />,
@@ -90,33 +68,10 @@ const itemsList = [
         text: "Control",
         icon: <ControlPointDuplicateRounded />,
         route: "/control"
-    },
-    {
-        text: "Usuarios",
-        icon: <SupervisedUserCircleRounded />,
-        route: "/user"
     }
 ];
 
 const userItemsList = [
-
-
-    /*{
-        text: "Conductores",
-        icon: <AirlineSeatReclineExtraRoundedIcon />,
-        route: "/conductor"
-    },
-    {
-        text: "Socios y Conductores",
-        icon: <GroupsRoundedIcon />,
-        route: "/socio"
-    },
-    {
-        text: "Control",
-        icon: <PreviewRoundedIcon />,
-        route: "/control"
-    },*/
-
     {
         text: "Lineas",
         icon: <VillaRoundedIcon />,
@@ -125,31 +80,15 @@ const userItemsList = [
     {
         text: "Admins",
         icon: <AdminPanelSettingsRoundedIcon />,
-        route: "/system"
-    }
-];
-/*
-const sesionItemsList = [
-
-
-    {
-        text: "Salir",
-        icon: <LogoutOutlined />,
-        route: "/login",
-        onClick: ({ setSesion }) => {
-            setSesion();
-        }
+        route: "/admin"
     },
     {
-        text: "Cambiar Linea",
-        icon: <LogoutOutlined />,
-        route: "/dashboard",
-        onClick: ({ setLinea }) => {
-            setLinea();
-        }
+        text: "Usuarios",
+        icon: <SupervisedUserCircleRounded />,
+        route: "/user"
     }
 ];
-*/
+
 
 const drawerWidth = 240;
 
@@ -218,10 +157,10 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-export default function MiniDrawer(props) {
+const MiniDrawer=(props)=> {
     const Contend = props.Contend;
     const { setSesion, sesion } = React.useContext(SesionContext)
-    const { setLinea } = React.useContext(LineaContext)
+    //const [Linea, setLinea] = React.useState();
 
 
     const theme = useTheme();
@@ -234,6 +173,8 @@ export default function MiniDrawer(props) {
     const handleDrawerClose = () => {
         setOpen(false);
     };
+
+
 
     return (
         <Box sx={{ display: 'flex' }}>
@@ -253,7 +194,7 @@ export default function MiniDrawer(props) {
                         <MenuIcon />
                     </IconButton>
                     <Typography variant="h6" noWrap component="div">
-                        Mini variant drawer
+                        {'sistema'}
                     </Typography>
                 </Toolbar>
             </AppBar>
@@ -290,11 +231,10 @@ export default function MiniDrawer(props) {
                     ))}
                 </List>
                 <Divider />
-                {sesion.roleId === "1" ? (
+                {sesion.admin === true ? (
                     <div>
                         <List>
                             {
-
                                 userItemsList.map((item) => (
                                     <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
                                         <ListItemButton component={RouterLink} to={item.route}
@@ -319,38 +259,42 @@ export default function MiniDrawer(props) {
                                 ))
 
                             }
+                            <ListItem disablePadding sx={{ display: 'block' }}>
+                                <ListItemButton onClick={() => {
+                                    const data = sesion;
+                                    data.lineaId = null;
+                                    data.linea = null;
+                                    window.localStorage.setItem('sesion', JSON.stringify(data))
+                                    setSesion({ ...sesion, lineaId: null, linea: null });
+                                }} component={RouterLink} to="/dashboard"
+                                    sx={{
+                                        minHeight: 48,
+                                        justifyContent: open ? 'initial' : 'center',
+                                        px: 2.5,
+                                    }}
+                                >
+                                    <ListItemIcon
+                                        sx={{
+                                            minWidth: 0,
+                                            mr: open ? 3 : 'auto',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <ChangeCircleRounded />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Cambiar Linea" sx={{ opacity: open ? 1 : 0 }} />
+                                </ListItemButton>
+                            </ListItem>
                         </List>
+
                         <Divider /></div>) : (<div />)}
                 <List>
-                    <ListItem disablePadding sx={{ display: 'block' }}>
-                        <ListItemButton onClick={() => {
-                            setLinea();
-                        }} component={RouterLink} to="/dashboard"
-                            sx={{
-                                minHeight: 48,
-                                justifyContent: open ? 'initial' : 'center',
-                                px: 2.5,
-                            }}
-                        >
-                            <ListItemIcon
-                                sx={{
-                                    minWidth: 0,
-                                    mr: open ? 3 : 'auto',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <ChangeCircleOutlined />
-                            </ListItemIcon>
-                            <ListItemText primary="Cambiar Linea" sx={{ opacity: open ? 1 : 0 }} />
-                        </ListItemButton>
-                    </ListItem>
+
+
                     <ListItem disablePadding sx={{ display: 'block' }}>
                         <ListItemButton onClick={() => {
                             window.localStorage.removeItem('sesion');
-                            setLinea();
                             setSesion();
-
-
                         }} component={RouterLink} to="/login"
                             sx={{
                                 minHeight: 48,
@@ -371,45 +315,16 @@ export default function MiniDrawer(props) {
                         </ListItemButton>
                     </ListItem>
 
-
-                    {/*sesionItemsList.map((item) => (
-                        <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-                            <ListItemButton onClick={item.onClick({setLinea:setLinea,setSesion:setSesion})} component={RouterLink} to={item.route}
-                                sx={{
-                                    minHeight: 48,
-                                    justifyContent: open ? 'initial' : 'center',
-                                    px: 2.5,
-                                }}
-                            >
-                                <ListItemIcon
-                                    sx={{
-                                        minWidth: 0,
-                                        mr: open ? 3 : 'auto',
-                                        justifyContent: 'center',
-                                    }}
-                                >
-                                    {item.icon}
-                                </ListItemIcon>
-                                <ListItemText primary={item.text} sx={{ opacity: open ? 1 : 0 }} />
-                            </ListItemButton>
-                        </ListItem>
-                    ))*/}
                 </List>
             </Drawer>
-
             <Box sx={{ flexGrow: 1, p: 3 }} >
-
                 <DrawerHeader />
-
-                {/*<MyRoutes />*/}
                 {Contend}
-
             </Box>
-
         </Box>
-
     );
 };
 MiniDrawer.propTypes = {
     Contend: PropTypes.object.isRequired,
 };
+export default MiniDrawer

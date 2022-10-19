@@ -1,5 +1,5 @@
 import React from 'react'
-import { MySvgControlGps } from '../assets/mySvg'
+import { MySvgControlGps, MySvgSystem } from '../assets/mySvg'
 import MiniDrawer from '../components/mydrawer'
 import axios from 'axios';
 import {
@@ -13,7 +13,7 @@ import { MySearchName } from '../components/MySearch';
 import { Delete, EditRounded, MoreVertRounded } from '@mui/icons-material';
 import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
  
-const UserScreen = () => {
+const AdminScreen = () => {
     const [Users, setUsers] = React.useState(Array);
     const [User, setUser] = React.useState(UserModelJson);
     const [anchorElMenu, setAnchorElMenu] = React.useState(null);
@@ -32,7 +32,7 @@ const UserScreen = () => {
     React.useEffect(() => {
         axios.get(urlApi + urlUser)
             .then((response) => {
-                const temp = response.data.filter((dat) => { if (dat.admin === false) return dat });
+                const temp = response.data.filter((dat) => { if (dat.admin === true) return dat });
                 setUsers(temp);
             });
 
@@ -79,7 +79,7 @@ const UserScreen = () => {
     const createUser = (e) => {
         if (!User.id || !User.name || !User.lastname || !User.phone || !User.email || !User.password || !User.password2) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
         if (User.password !== User.password2) return enqueueSnackbar("Las contrase;as no coinciden", { variant: 'error' });
-        User.admin = false;
+        User.admin = true;
         delete User.lineaId
         axios.post(urlApi + urlUser, User)
             .then((response) => {
@@ -95,10 +95,10 @@ const UserScreen = () => {
                 <Box>
                     <MyBanner
                         OpenDialogCreate={handleClickOpenDialogCreate}
-                        MySvg=<MySvgControlGps />
-                        MyTitle='Usuario'
-                        MyDescription='Aqui podras administrar los datos de los Usuarios del sistema'
-                        MyBuutonText='Crear Usuario' />
+                        MySvg=<MySvgSystem />
+                        MyTitle='Super Usuario'
+                        MyDescription='Aqui podras administrar los datos de los Administradores del sistema'
+                        MyBuutonText='Crear Super Usuario' />
 
                     <Divider />
                     <MySearchName searchData={searchData} setSearchData={setSearchData} />
@@ -216,4 +216,4 @@ const UserScreen = () => {
         }></MiniDrawer>
     )
 }
-export default UserScreen
+export default AdminScreen

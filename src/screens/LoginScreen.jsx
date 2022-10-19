@@ -1,213 +1,91 @@
 import * as React from 'react'
 import {
-    Divider,
-    Box,
-    Button,
-    IconButton,
-    ListItemIcon,
-    Typography,
-    ListItemText,
-    TextField,
-    MenuItem,
-    Menu,
-    Dialog,
-    DialogTitle,
-    DialogContentText,
-    DialogContent,
-    DialogActions,
-    Unstable_Grid2 as Grid
+    Box, Button, Typography, TextField, Unstable_Grid2 as Grid
 } from '@mui/material';
 import { UserModelJson } from '../models/models';
 import { MySvgSystem } from '../assets/mySvg';
 import { useSnackbar } from 'notistack';
 import axios from 'axios';
 import { urlApi, urlLinea, urlUser } from '../api/myApiData';
-import App from '../App';
 import { useNavigate } from 'react-router-dom';
 import { SesionContext } from '../providers/SesionProvider';
-import { random } from '@ctrl/tinycolor';
 
 const LoginScreen = () => {
     const [login, setLogin] = React.useState(UserModelJson);
-    const [lineas, setLineas] = React.useState();
-    const [reload, setReload] = React.useState();
+    const { setSesion, sesion } = React.useContext(SesionContext)
 
     const { enqueueSnackbar } = useSnackbar();
     const navigater = useNavigate();
-    const { setSesion, sesion } = React.useContext(SesionContext)
 
-    React.useEffect(() => {
-        const loginSesion = window.localStorage.getItem('sesion');
+    const SesionCompro = () => {
+        const loginSesion = JSON.parse(window.localStorage.getItem('sesion'));
         if (loginSesion) {
-            setSesion(JSON.parse(loginSesion))
-            navigater("/dashboard", { replace: true });
-        }
-    }, [])
-
-    React.useEffect(() => {
-        //setSesion("");
-        /*if (!lineas) {
-            axios.get(urlApi + urlLinea)
-                .then((responseLineas) => {
-                    setLineas(responseLineas.data)
-                    //console.log(responseLineas.data);
+            axios.get(urlApi + urlUser + "/" + loginSesion.id)
+                .then((res) => {
+                    if (res.data.admin === true) {
+                        navigater("/dashboard", { replace: true });
+                        setSesion(loginSesion);
+                    } else {
+                        if (res.data.lineaId) {
+                            navigater("/interno", { replace: true });
+                            setSesion(loginSesion);
+                        }
+                    }
                 });
-        }*/
-
-        if (sesion) {
-            //console.log(sesion)
-            
-
-            if (sesion.trabajos.length > 0 || sesion.roleId==="1") {
-                window.localStorage.setItem('sesion', JSON.stringify(sesion))
-
-                navigater("/dashboard", { replace: true });
-            }
-            else {
-
-                enqueueSnackbar("No trabaja en ninguna linea", { variant: 'error' });
-                setSesion();
-            }
         }
+    }
 
-    }, [sesion])
-
-
+    React.useEffect(() => { SesionCompro() })
 
     return (
-        <Box sx={{
-            display: 'flex',
-            p: 3,
-        }}>
-
-            <Grid container
-
-                sx={{
-                    //backgroundColor: "blue",
-                    //width: "100%",
-                    flexGrow: 1
-                }}
-                justifyContent="center"
-                alignItems="center"
-                columnSpacing={2}
-                rowSpacing={2}
-            >
-
-                <Grid
-                    container
-                    p={1}
-                    justifyContent="space-evenly"
-                    alignItems="center"
-                    xs={11} sm={6} md={5} >
-
-                    <Grid
-                        xs={12}
-                        maxWidth={200} >
+        <Box sx={{ display: 'flex', p: 3, }}>
+            <Grid container sx={{ flexGrow: 1 }} justifyContent="center" alignItems="center" spacing={2} >
+                <Grid container p={1} justifyContent="space-evenly" alignItems="center" xs={11} sm={6} md={5} >
+                    <Grid xs={12} maxWidth={200} >
                         <Grid xs={12} >
                             <MySvgSystem />
                         </Grid>
                     </Grid>
                     <Grid xs={12} >
-                        <Typography variant="h3" textAlign={'center'}>
-                            <b>Login</b>
-                        </Typography>
-                        <div style={{ fontSize: '15px' }} >
-
-                        </div>
-
+                        <Typography variant="h3" textAlign={'center'}> <b>Login</b> </Typography>
                     </Grid>
-
-
-
                     <Grid xs={12} >
-                        <TextField
-                            fullWidth
+                        <TextField fullWidth label="Identidicador" variant="standard" value={login.id}
                             inputProps={{ style: { textAlign: 'center' } }}
-                            label="Identidicador"
-                            value={login.id}
-                            onChange={(event) => {
-                                setLogin({ ...login, id: event.target.value });
-                            }}
-                            variant="standard"
-                        />
+                            onChange={e => setLogin({ ...login, id: e.target.value })} />
                     </Grid>
                     <Grid xs={12}>
-                        <TextField
-                            fullWidth
+                        <TextField fullWidth type='password' label="Contraseña" variant="standard" value={login.password}
                             inputProps={{ style: { textAlign: 'center' } }}
-                            type='password'
-                            label="Contraseña"
-                            value={login.password}
-                            onChange={(event) => {
-                                setLogin({ ...login, password: event.target.value });
-                            }}
-                            variant="standard"
-                        />
+                            onChange={e => setLogin({ ...login, password: e.target.value })} />
                     </Grid>
                     <Grid>
                         <Button variant="contained"
-                            //to="/User"
                             onClick={(e) => {
-
-                                if (!login.id
-                                    || !login.password) {
-
-                                    return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
-                                }
-                                //console.log(login);
+                                if (!login.id || !login.password) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
                                 axios.post(urlApi + urlUser + "/login", login)
-                                    .then(async (responseUser) => {
-                                        setSesion(responseUser.data);
-                                        /*var objet = responseUser.data;
-                                        //console.log("ola")
-                                        //console.log(responseUser.data.trabajos)
-                                        objet.trabajos =
-                                            responseUser.data.trabajos.map((item) => { return item.linea })
-
-                                        //console.log(objet)
-                                        //setSesion(responseUser.data);
-                                        //setReload(1);
-                                        //console.log(sesion );
-                                        if (objet.roleId === "1") {
-                                            axios.get(urlApi + urlLinea)
-                                                .then((responseLineas) => {
-                                                    objet.trabajos = responseLineas.data;
-                                                    setSesion(objet);
-                                                    // setLineas(responseLineas.data)
-                                                    //console.log(responseLineas.data);
-                                                });
-
-                                            //setReload(1)
-                                            //console.log(sesion );
-                                            //navigater("/interno", { replace: true });
+                                    .then((res) => {
+                                        if (res.data.admin === true) {
+                                            window.localStorage.setItem('sesion', JSON.stringify(res.data));
+                                            SesionCompro()
+                                        } else {
+                                            if (!res.data.linea) {
+                                                enqueueSnackbar('No trabaja en ninguna Linea', { variant: 'error' });
+                                            } else {
+                                                window.localStorage.setItem('sesion', JSON.stringify(res.data))
+                                                SesionCompro()
+                                            }
                                         }
-                                        else {
-                                            setSesion(objet);
-                                        }*/
-                                        //setReload()
-
                                     })
-                                    .catch((e) => {
-                                        //console.log(e);
-
-                                        enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' });
-
-                                    });
-                            }
-                            }
+                                    .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }) })
+                            }}
                         >
                             Iniciar Sesion
                         </Button>
                     </Grid>
-
-
                 </Grid>
             </Grid>
         </Box>
-
-
-
-
     )
 }
 
