@@ -16,7 +16,7 @@ import Socket from '../components/Socket.io';
 import MapView from '../components/MapView';
 
 
-const ViajeScreen = () => { 
+const ViajeScreen = () => {
   const { sesion } = React.useContext(SesionContext)
 
   const [ida, setIda] = React.useState(true);
@@ -90,12 +90,15 @@ const ViajeScreen = () => {
 
   const deleteVuelta = () => {
     axios.delete(urlApi + urlVuelta + "/" + vuelta.id)
-      .then((response) => { enqueueSnackbar("eliminado con exito", { variant: 'success' }); })
+      .then((response) => {
+        enqueueSnackbar("eliminado con exito", { variant: 'success' });
+        handleCloseDialog()
+      })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
-    handleCloseDialog();
-  }
-  const CreateVuelta = () => {
 
+  }
+
+  const CreateVuelta = () => {
     if (!vuelta.internoId || !vuelta.userId || !vuelta.datetimeIda || !vuelta.timeParada) return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
     const data = vuelta;
     data.ida = linea.ida;
@@ -137,9 +140,8 @@ const ViajeScreen = () => {
 
 
     axios.post(urlApi + urlVuelta, data)
-      .then((response) => { enqueueSnackbar("creado con exito", { variant: 'success' }); })
-      .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
-    handleCloseDialog();
+      .then((response) => { enqueueSnackbar("creado con exito", { variant: 'success' }); handleCloseDialog();})
+      .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); }); 
   }
   return (
     <MiniDrawer Contend={
@@ -310,8 +312,8 @@ const ViajeScreen = () => {
                 Ver Viaje
               </Grid2>
               <Grid2 container alignItems={'center'} justifyContent={'end'} xs={6}>
-              Ida:
-                <Switch checked={ida} onChange={(e)=>{setIda(!ida)}}/>
+                Ida:
+                <Switch checked={ida} onChange={(e) => { setIda(!ida) }} />
               </Grid2>
             </Grid2>
 

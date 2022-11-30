@@ -1,6 +1,6 @@
 
-export  const urlSocket='http://44.201.85.4:3001';
-export  const urlApi='http://44.201.85.4:3000/api';
+export  const urlSocket='http://44.206.250.164:3001';
+export  const urlApi='http://44.206.250.164:3000/api';
 export  const urlUser='/user';
 export  const urlLinea='/linea';
 export  const urlRole='/role';
