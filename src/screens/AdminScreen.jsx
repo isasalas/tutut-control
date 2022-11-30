@@ -152,8 +152,7 @@ const AdminScreen = () => {
                                         </Grid>
                                     </Grid>
                                 </Grid>
-                            </Box>}
-
+                            </Box>} 
                     />
 
                     <MyDialogEdit Title='Editar Usuario' Description='Edita los campos que desees' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editUser}
