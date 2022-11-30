@@ -78,7 +78,7 @@ const UserScreen = () => {
 
     const createUser = (e) => {
         if (!User.id || !User.name || !User.lastname || !User.phone || !User.email || !User.password || !User.password2) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
-        if (User.password !== User.password2) return enqueueSnackbar("Las contrase;as no coinciden", { variant: 'error' });
+        if (User.password !== User.password2) return enqueueSnackbar("Las contraseñas no coinciden", { variant: 'error' });
         User.admin = false;
         delete User.lineaId
         axios.post(urlApi + urlUser, User)
@@ -97,7 +97,7 @@ const UserScreen = () => {
                         OpenDialogCreate={handleClickOpenDialogCreate}
                         MySvg=<MySvgControlGps />
                         MyTitle='Usuario'
-                        MyDescription='Aqui podras administrar los datos de los Usuarios del sistema'
+                        MyDescription='Aquí podras administrar los datos de los Usuarios del sistema, estos pueden ser conductores y socios. También controles si les asignas ese rol'
                         MyBuutonText='Crear Usuario' />
 
                     <Divider />
@@ -124,7 +124,7 @@ const UserScreen = () => {
                             </Grid>))}
                     </Grid>
 
-                    <MyDialogCreate Title='Crear Nuevo Usuario' Description='Introduce el nombre y socio del Usuario' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createUser}
+                    <MyDialogCreate Title='Crear Nuevo Usuario' Description='Introduce los datos del nuevo usuario' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createUser}
                         Conten={
                             <Box >
                                 <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
@@ -139,10 +139,10 @@ const UserScreen = () => {
                                             <TextField fullWidth label="Apellido" variant="standard" value={User.lastname} onChange={e => setUser({ ...User, lastname: e.target.value })} />
                                         </Grid>
                                         <Grid xs={6} >
-                                            <TextField fullWidth type="password" label="contrasenia" variant="standard" value={User.password} onChange={e => setUser({ ...User, password: e.target.value })} />
+                                            <TextField fullWidth type="password" label="Contraseña" variant="standard" value={User.password} onChange={e => setUser({ ...User, password: e.target.value })} />
                                         </Grid>
                                         <Grid xs={6} >
-                                            <TextField fullWidth type="password" label="Confirma tu contrasenia" variant="standard" value={User.password2} onChange={e => setUser({ ...User, password2: e.target.value })} />
+                                            <TextField fullWidth type="password" label="Confirma tu contraseña" variant="standard" value={User.password2} onChange={e => setUser({ ...User, password2: e.target.value })} />
                                         </Grid>
                                         <Grid xs={4} >
                                             <TextField fullWidth label="Telefono" type="number" variant="standard" value={User.phone} onChange={e => setUser({ ...User, phone: e.target.value })} />
@@ -156,7 +156,7 @@ const UserScreen = () => {
 
                     />
 
-                    <MyDialogEdit Title='Editar Usuario' Description='Edita los campos que decees' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editUser}
+                    <MyDialogEdit Title='Editar Usuario' Description='Edita los datos del usuario' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editUser}
                         Conten={
                             <Box >
                                 <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
@@ -183,7 +183,7 @@ const UserScreen = () => {
 
                     <MyDialogDelete
                         Title='Eliminar Usuario'
-                        Description='Estas seguro de eliminar este Usuario?'
+                        Description='¿Estás seguro de eliminar este usuario?'
                         openDialogDelete={openDialogDelete}
                         scrollDialog={scrollDialog}
                         FuncDelete={deleteUser}

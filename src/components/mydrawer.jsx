@@ -37,7 +37,7 @@ import {
     ChangeCircleRounded
 } from '@mui/icons-material';
 
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { SesionContext } from '../providers/SesionProvider';
 import axios from 'axios';
 import { urlApi, urlLinea } from '../api/myApiData';
@@ -157,10 +157,10 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
     }),
 );
 
-const MiniDrawer=(props)=> {
+const MiniDrawer = (props) => {
     const Contend = props.Contend;
     const { setSesion, sesion } = React.useContext(SesionContext)
-    //const [Linea, setLinea] = React.useState();
+    const [Linea, setLinea] = React.useState();
 
 
     const theme = useTheme();
@@ -174,15 +174,21 @@ const MiniDrawer=(props)=> {
         setOpen(false);
     };
 
+    const navigater = useNavigate();
 
+
+    React.useEffect(() => {
+        if (!sesion.lineaId) navigater("/login", { replace: true });
+        axios.get(urlApi + urlLinea + "/" + sesion.lineaId)
+            .then((response) => { setLinea(response.data); })
+    }, [])
 
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
-            <AppBar position="fixed" open={open}>
+            <AppBar position="fixed"  open={open}>
                 <Toolbar>
-                    <IconButton
-                        color="inherit"
+                    <IconButton color="inherit"
                         aria-label="open drawer"
                         onClick={handleDrawerOpen}
                         edge="start"
@@ -190,12 +196,8 @@ const MiniDrawer=(props)=> {
                             marginRight: 5,
                             ...(open && { display: 'none' }),
                         }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap component="div">
-                        {'sistema'}
-                    </Typography>
+                    > <MenuIcon /> </IconButton>
+                    <Typography variant="h6" noWrap component="div">  {!Linea? "...": Linea.name} </Typography>
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" open={open}>

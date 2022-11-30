@@ -910,3 +910,33 @@ export const MySvgSystem = (props) => (
   </svg>
 )
 
+
+export const SvgPin = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={512}
+    height={512}
+    viewBox="0 0 58 58"
+    style={{
+      enableBackground: "new 0 0 512 512",
+    }}
+    xmlSpace="preserve"
+    {...props}
+  >
+    <path
+      style={{
+        stroke: "#556080",
+        strokeWidth: 2,
+        strokeLinecap: "round",
+        strokeMiterlimit: 10,
+      }}
+      data-original="#000000"
+      d="M29 28v29"
+    />
+    <circle cx={29} cy={14} r={14} fill="#dd352e" data-original="#dd352e" />
+    <circle cx={24} cy={10} r={3} fill="#f76363" data-original="#f76363" />
+  </svg>
+)
+
+
+

@@ -22,6 +22,7 @@ const LoginScreen = () => {
         if (loginSesion) {
             axios.get(urlApi + urlUser + "/" + loginSesion.id)
                 .then((res) => {
+                   
                     if (res.data.admin === true) {
                         navigater("/dashboard", { replace: true });
                         setSesion(loginSesion);
@@ -30,6 +31,11 @@ const LoginScreen = () => {
                             navigater("/interno", { replace: true });
                             setSesion(loginSesion);
                         }
+                        /*else{
+                            console.log('putaaa')
+                            navigater("/homeconductor", { replace: true });
+                            setSesion(loginSesion);
+                        }*/
                     }
                 });
         }
@@ -65,12 +71,15 @@ const LoginScreen = () => {
                                 if (!login.id || !login.password) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
                                 axios.post(urlApi + urlUser + "/login", login)
                                     .then((res) => {
+
                                         if (res.data.admin === true) {
                                             window.localStorage.setItem('sesion', JSON.stringify(res.data));
                                             SesionCompro()
                                         } else {
-                                            if (!res.data.linea) {
+                                            if (!res.data.lineaId) {
                                                 enqueueSnackbar('No trabaja en ninguna Linea', { variant: 'error' });
+                                                /*window.localStorage.setItem('sesion', JSON.stringify(res.data));
+                                                SesionCompro()*/
                                             } else {
                                                 window.localStorage.setItem('sesion', JSON.stringify(res.data))
                                                 SesionCompro()

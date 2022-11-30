@@ -1,55 +1,47 @@
 import * as React from 'react';
 import axios from 'axios';
 import {
-  Box, Button, Divider, TextField, Typography, Unstable_Grid2 as Grid2
+  Box, Button, Divider, TextField, Typography, Unstable_Grid2 as Grid2, InputAdornment, Switch
 } from '@mui/material';
 import {
   Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineDot, TimelineOppositeContent, TimelineContent, timelineOppositeContentClasses
 } from '@mui/lab';
 import MiniDrawer from '../components/mydrawer';
-
-import { DirectionsRenderer, GoogleMap, MarkerF } from '@react-google-maps/api';
-import { MyBanner } from '../components/myBanner';
-import { MySvgControl } from '../assets/mySvg';
+import { GoogleMap } from '@react-google-maps/api';
 import { urlApi, urlLinea } from '../api/myApiData';
 import { SesionContext } from '../providers/SesionProvider';
 import { LineaModelJson } from '../models/models';
-import { ContactlessOutlined } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 
 let dirSerIda, dirRenIda, dirSerVuelta, dirRenVuelta;
-
-const defaultLocation = { lat: -17.783598, lng: -63.180524 };
-/*let destinationInit = { lat: -17.774608, lng: -63.182515 };
-let originInit = { lat: -17.792102, lng: -63.178993 };*/
-
+let alphabet = 'ABCDEFGHIJKLMNOPQRSTUXYZ';
+let defaultLocation = { lat: -17.783598, lng: -63.180524 };
 
 const RutasScreen = () => {
   const { sesion } = React.useContext(SesionContext)
   const [Linea, setLinea] = React.useState(LineaModelJson)
+  const [SwitchOn, setSwitchOn] = React.useState({
+    on: true,
+    label: "Ruta de Ida",
+    displayIda: 'flex',
+    displayVuelta: 'none'
+  })
+
   const { enqueueSnackbar } = useSnackbar();
-
-
   React.useEffect(() => {
     axios.get(urlApi + urlLinea + "/" + sesion.lineaId)
       .then((re) => { setLinea(re.data); })
-
   }, [])
-
   React.useEffect(() => {
-    //console.log('se reacrgo')
-  }, [Linea])
-
-
-
-  function initMap({ map, dirSer, dirRen, ruta }) {
+  }, [Linea, SwitchOn])
+  function initMap({ map, dirSer, dirRen, ruta, type }) {
     dirSer = new window.google.maps.DirectionsService();
-    dirRen = new window.google.maps.DirectionsRenderer({
-      draggable: true,
-      map: map,
-    });
+    dirRen = new window.google.maps.DirectionsRenderer({ draggable: true, map: map, });
     dirRen.addListener("directions_changed", function (e) {
       var directions = dirRen.getDirections();
+
+      //directions.routes[0].overview_path.map((dir)=>{console.log(dir.toJSON())})
+
       if (directions) {
         try { directions.request.destination = directions.request.destination.location.toJSON() } catch { directions.request.destination = directions.request.destination.toJSON() }
         try { directions.request.origin = directions.request.origin.location.toJSON() } catch { directions.request.origin = directions.request.origin.toJSON() }
@@ -60,55 +52,60 @@ const RutasScreen = () => {
         })
         ruta.origin.location = directions.request.origin
         ruta.destination.location = directions.request.destination
-        ruta.waypoint = directions.request.waypoints
+        ruta.route = directions.routes[0].overview_path.map((dir) => { return dir.toJSON() })
+        var i = -1;
+        var time = ruta.waypoints.filter((point) => {
+          if (point.waypoint.stopover === true) { return point.time }
+        }).map((point) => { return point.time })
+        ruta.polyline = directions.routes[0].overview_polyline;
+
+        ruta.waypoints = directions.request.waypoints.map(
+          (point) => {
+            if (point.stopover === true) {
+              i++
+              return { waypoint: point, time: time[i] }
+            }
+            else { return { waypoint: point } }
+          }
+        )
+        console.log(Linea.vuelta)
+        console.log(Linea.ida)
+        if (type === true) { setLinea({ ...Linea, ida: ruta }) }
+        else { setLinea({ ...Linea, vuelta: ruta }) }
       }
-      console.log(ruta)
     });
 
     map.addListener("click", function (e) {
-      ruta.waypoint.push({ location: e.latLng.toJSON(), stopover: true });
+      ruta.waypoints.push({
+        waypoint: { location: e.latLng.toJSON(), stopover: true },
+        time: 5
+      });
       createDirection({ dirRen: dirRen, dirSer: dirSer, ruta: ruta })
     });
     createDirection({ dirRen: dirRen, dirSer: dirSer, ruta: ruta })
   }
 
   const createDirection = ({ ruta, dirSer, dirRen }) => {
-    /*delete ruta.origin.time;
-    delete ruta.destination.time;*/
     dirSer.route({
       origin: ruta.origin.location,
       destination: ruta.destination.location,
       travelMode: window.google.maps.TravelMode.DRIVING,
-      waypoints: ruta.waypoint.map((point) => { delete point.time; return point })
+      waypoints: ruta.waypoints.map((point) => { return point.waypoint })
     })
-      .then(function (result) {
-        console.warn(ruta.waypoint)
-        dirRen.setDirections(result);
-      })
-      .catch(function (e) {
-        alert("error: " + e);
-      });
+      .then(function (result) { dirRen.setDirections(result) })
+      .catch(function (e) { alert("error: " + e) });
   }
 
   const initMapIda = (map) => {
-    initMap({
-      map: map,
-      dirRen: dirRenIda,
-      dirSer: dirSerIda,
-      ruta: Linea.ida,
-    })
+    initMap({ map: map, dirRen: dirRenIda, dirSer: dirSerIda, ruta: Linea.ida, type: true })
   }
 
   const initMapVuelta = (map) => {
-    initMap({
-      map: map,
-      dirRen: dirRenVuelta,
-      dirSer: dirSerVuelta,
-      ruta: Linea.vuelta,
-    })
+    initMap({ map: map, dirRen: dirRenVuelta, dirSer: dirSerVuelta, ruta: Linea.vuelta, type: false })
   }
 
   const GuardarRutaIda = () => {
+    console.log(Linea.ida.waypoints)
     axios.put(urlApi + urlLinea + "/" + sesion.lineaId, { ida: Linea.ida })
       .then((re) => {
         enqueueSnackbar("editado con exito", { variant: 'success' });
@@ -127,118 +124,195 @@ const RutasScreen = () => {
   }
 
 
+  var indiceParadaIda = 1
+  var indiceParadaVuelta = 1
+
+
+
+
+  const switchChange = () => {
+    if (SwitchOn.on) {
+      setSwitchOn({
+        on: false,
+        label: "Ruta de Vuelta",
+        displayIda: 'none',
+        displayVuelta: 'flex'
+      })
+    }
+    else {
+      setSwitchOn({
+        on: true,
+        label: "Ruta de Ida",
+        displayIda: 'flex',
+        displayVuelta: 'none'
+      })
+    }
+  }
 
   return (
     <MiniDrawer Contend={
 
       !Linea.id ? <></> :
         <Box >
-          <Grid2 container columnSpacing={2} rowSpacing={2}>
-            <Grid2 container xs={12} >
-              <Grid2 xs={12} sm={8} container marginBottom={"3px"}>
-                <Grid2 xs={12} sm={6} >
-                  <Typography variant="h5">
-                    <b>Ruta de Ida</b>
-                  </Typography>
-                </Grid2>
-                <Grid2 container xs={12} sm={6} justifyContent="end" >
-                  <Button variant="text" onClick={GuardarRutaIda}>
-                    Guardar Cambios
-                  </Button>
-                </Grid2>
-                <Grid2 xs={12} >
-
-                  {!Linea.ida ? <></> :
-                    <GoogleMap
-                      Key={Linea}
-                      center={defaultLocation}
-                      options={{ mapTypeControl: false }}
-                      zoom={14}
-                      onLoad={(map) => initMapIda(map)}
-                      mapContainerStyle={{ height: '460px', width: '100%' }}
-                    >
-                    </GoogleMap>}
-                </Grid2>
+          <Grid2 container columnSpacing={2} rowSpacing={1}>
+            <Grid2 container xs={12} sm={6}>
+              <Switch xs={6} checked={SwitchOn.on} onChange={switchChange} name="gilad" />
+              <Typography variant="h6" xs={6}>
+                <b>{SwitchOn.label}</b>
+              </Typography>
+            </Grid2>
+            <Grid2 container xs={12} display={SwitchOn.displayIda}>
+              <Grid2 xs={12} sm={8}  >
+                {!Linea.ida ? <></> :
+                  <GoogleMap
+                    center={defaultLocation}
+                    options={{ mapTypeControl: false, zoom: 13 }}
+                    onLoad={(map) => initMapIda(map)}
+                    mapContainerStyle={{ height: '480px', width: '100%', marginBottom: 8 }}
+                  >
+                  </GoogleMap>} 
               </Grid2>
 
               <Grid2 xs={12} sm={4} >
                 <Timeline
                   sx={{
-                    [`& .${timelineOppositeContentClasses.root}`]: {
-                      flex: 1,
-                    },
+                    m: 0,
+                    mb: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    height: 440,
+                    overflow: "hidden",
+                    overflowY: "scroll",
+
+                  }}
+                >
+                  <TimelineItem>
+                    <TimelineOppositeContent children={"-"} color="textSecondary" />
+                    <TimelineSeparator> <TimelineDot variant="outlined" color="warning" /> <TimelineConnector />  </TimelineSeparator>
+                    <TimelineContent>Salida A</TimelineContent>
+                  </TimelineItem>
+                  {
+                    Linea.ida.waypoints.map((point, index) => {
+                      if (point.waypoint.stopover === true) {
+                        return <TimelineItem key={index}>
+                          <TimelineOppositeContent color="textSecondary">
+                            <TextField variant='standard' size='small' sx={{ width: '45px' }}
+                              value={Linea.ida.waypoints[index].time.toString()}
+                              InputProps={{ endAdornment: <InputAdornment position="end">m.</InputAdornment> }}
+                              onChange={e => {
+                                var ida = Linea.ida;
+                                ida.waypoints[index].time = parseInt(e.target.value?e.target.value:0)
+                                //console.log( e.target.value)
+                                setLinea({ ...Linea, ida: ida })
+                              }}
+                            />
+                          </TimelineOppositeContent>
+                          <TimelineSeparator> <TimelineDot variant="outlined" color="error" /> <TimelineConnector />  </TimelineSeparator>
+                          <TimelineContent>{"Stop " + alphabet[indiceParadaIda++]}</TimelineContent>
+                        </TimelineItem>
+                      }
+                    })
+                  }
+
+                  <TimelineItem>
+                    <TimelineOppositeContent color="textSecondary">
+                      <TextField variant='standard' size='small' sx={{ width: '45px' }}
+                        value={Linea.ida.destination.time.toString()}
+                        InputProps={{ endAdornment: <InputAdornment position="end">m.</InputAdornment> }}
+                        onChange={e => {
+                          var ida = Linea.ida;
+                          ida.destination.time = parseInt(e.target.value?e.target.value:0)
+                          setLinea({ ...Linea, ida: ida })
+                        }}
+                      />
+                    </TimelineOppositeContent>
+                    <TimelineSeparator> <TimelineDot color="success" /> </TimelineSeparator>
+                    <TimelineContent>Stop {alphabet[indiceParadaIda++]}</TimelineContent>
+                  </TimelineItem>
+                </Timeline>
+                <Grid2 container xs={12} justifyContent="right" >
+                  <Button children={"Guardar Cambios"} variant="text" onClick={GuardarRutaIda} />
+                </Grid2>
+
+              </Grid2>
+            </Grid2>
+
+            <Grid2 container xs={12} display={SwitchOn.displayVuelta}>
+              <Grid2 xs={12} sm={8} >
+                {!Linea.vuelta ? <></> :
+                  <GoogleMap
+                    center={defaultLocation}
+                    options={{ mapTypeControl: false, zoom: 13 }}
+                    zoom={14}
+                    onLoad={(map) => initMapVuelta(map)}
+                    mapContainerStyle={{ height: '480px', width: '100%', marginBottom: 8 }}
+                  >
+                  </GoogleMap>}
+                 
+              </Grid2>
+              <Grid2 xs={12} sm={4} >
+                <Timeline
+                  sx={{
+                    m: 0,
+                    mb: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    height: 440,
+                    overflow: "hidden",
+                    overflowY: "scroll",
                   }}
                 >
 
                   <TimelineItem>
-                    <TimelineOppositeContent color="textSecondary">
-                      123
-
-                    </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineDot />
-                      <TimelineConnector />
-                    </TimelineSeparator>
-                    <TimelineContent>Salida</TimelineContent>
+                    <TimelineOppositeContent children={"-"} color="textSecondary" />
+                    <TimelineSeparator> <TimelineDot variant="outlined" color="warning" /> <TimelineConnector />  </TimelineSeparator>
+                    <TimelineContent>Salida A</TimelineContent>
                   </TimelineItem>
                   {
-                    Linea.ida.waypoint.filter((val) => {
-                      if (val.stopover === true) return val
-                    }).map((point) => {
-                      <TimelineItem>
-                        <TimelineOppositeContent color="textSecondary">
-                          {"+" + point.time + " m."}
-                        </TimelineOppositeContent>
-                        <TimelineSeparator>
-                          <TimelineDot />
-                          <TimelineConnector />
-                        </TimelineSeparator>
-                        <TimelineContent>Salida</TimelineContent>
-                      </TimelineItem>
-
+                    Linea.vuelta.waypoints.map((point, index) => {
+                      if (point.waypoint.stopover === true) {
+                        return <TimelineItem key={index}>
+                          <TimelineOppositeContent color="textSecondary">
+                            <TextField variant='standard' size='small' sx={{ width: '45px' }}
+                              value={Linea.vuelta.waypoints[index].time.toString()}
+                              InputProps={{ endAdornment: <InputAdornment position="end">m.</InputAdornment> }}
+                              onChange={e => {
+                                var vuelta = Linea.vuelta;
+                                vuelta.waypoints[index].time = parseInt(e.target.value?e.target.value:0)
+                                setLinea({ ...Linea, vuelta: vuelta })
+                              }}
+                            />
+                          </TimelineOppositeContent>
+                          <TimelineSeparator> <TimelineDot variant="outlined" color="error" /> <TimelineConnector />  </TimelineSeparator>
+                          <TimelineContent>{"Stop " + alphabet[indiceParadaVuelta++]}</TimelineContent>
+                        </TimelineItem>
+                      }
                     })
                   }
+
                   <TimelineItem>
                     <TimelineOppositeContent color="textSecondary">
-                      123
+                      <TextField variant='standard' size='small' sx={{ width: '45px' }}
+                        value={Linea.vuelta.destination.time.toString()}
+                        InputProps={{
+                          endAdornment: <InputAdornment position="end">m.</InputAdornment>,
+                          //inputProps: { min: 0 }
+
+                        }}
+                        onChange={e => {
+                          var vuelta = Linea.vuelta;
+                          vuelta.destination.time = parseInt(e.target.value?e.target.value:0)
+                          setLinea({ ...Linea, vuelta: vuelta })
+                        }}
+                      />
                     </TimelineOppositeContent>
-                    <TimelineSeparator>
-                      <TimelineDot />
-                    </TimelineSeparator>
-                    <TimelineContent>Final</TimelineContent>
+                    <TimelineSeparator> <TimelineDot color="success" /> </TimelineSeparator>
+                    <TimelineContent>Stop {alphabet[indiceParadaVuelta++]}</TimelineContent>
                   </TimelineItem>
                 </Timeline>
-              </Grid2>
-
-              <Grid2 xs={12}>
-                <Divider />
-              </Grid2>
-            </Grid2>
-
-            <Grid2 xs={12} >
-              <Grid2 xs={12} container paddingX={1} >
-                <Grid2 xs={12} sm={6}>
-                  <Typography variant="h5">
-                    <b>Ruta de Vuelta</b>
-                  </Typography>
+                <Grid2 container xs={12} justifyContent="right" >
+                  <Button children={"Guardar Cambios"} variant="text" onClick={GuardarRutaVuelta} />
                 </Grid2>
-                <Grid2 container xs={12} sm={6} justifyContent="right" >
-                  <Button variant="text" onClick={GuardarRutaVuelta}>
-                    Guardar Cambios
-                  </Button>
-                </Grid2>
-              </Grid2>
-
-              <GoogleMap
-                center={defaultLocation}
-                zoom={14}
-                onLoad={(map) => initMapVuelta(map)}
-                mapContainerStyle={{ height: '460px', width: '100%' }}
-                
-              >
-              </GoogleMap>
-              <Grid2 xs={12}>
-                <Divider />
               </Grid2>
             </Grid2>
           </Grid2>

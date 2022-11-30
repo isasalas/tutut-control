@@ -82,7 +82,7 @@ export const ControlScreen = () => {
             OpenDialogCreate={handleClickOpenDialogCreate}
             MySvg=<MySvgControl />
             MyTitle='Controles'
-            MyDescription={'Aqui podras administrar los datos de los usuarios del sistema de la Linea'}
+            MyDescription={'Aquí podras administrar los datos de los usuarios del sistema de la Linea'}
             MyBuutonText='Crear Control' />
           <Divider />
           <Grid container columnSpacing={3} >
@@ -121,7 +121,7 @@ export const ControlScreen = () => {
                 </Grid>
               </Box>} />
 
-          <MyDialogDelete Title='Eliminar Control' Description='Seguro que quieres eliminar este control?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteControl} />
+          <MyDialogDelete Title='Eliminar Control' Description='¿Seguro que quieres quitar el rol de control a este usuario?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteControl} />
         </Box>
     }></MiniDrawer>)
 }

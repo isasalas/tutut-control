@@ -152,7 +152,7 @@ const LineaScreen = () => {
           OpenDialogCreate={handleClickOpenDialogCreate}
           MySvg={<MySvgLinea />}
           MyTitle={"Lineas"}
-          MyDescription={"Administre las lineas de transporte publicoAdministre las lineas de transporte publico"}
+          MyDescription={"Administre las lineas de transporte público en el sistema"}
           MyBuutonText={"Crear Nueva Linea"}
         />
         <Divider />
@@ -203,7 +203,7 @@ const LineaScreen = () => {
         </Grid>
 
 
-        <MyDialogCreate Title='Crear Nuevo Interno' Description='Introduce el id, nombre, telefono, descripticion, colores y direccion de la nueva linea' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createLinea}
+        <MyDialogCreate Title='Crear Nueva Linea' Description='Introduce nombre, telefono, colores y direccion de la nueva linea' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createLinea}
           Conten={
             <Box >
               <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
@@ -253,7 +253,7 @@ const LineaScreen = () => {
             </Box>
           } />
 
-        <MyDialogEdit Title='title' Description='Edita el id, nombre, telefono, descripticion, colores y direccion de la nueva linea' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editLinea}
+        <MyDialogEdit Title='Editar Linea' Description='Edita nombre, telefono, colores y direccion de la linea' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editLinea}
           Conten={
             <Box >
               <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
@@ -305,7 +305,7 @@ const LineaScreen = () => {
             </Box>
           } />
 
-        <MyDialogDelete Title='Eliminar Linea' Description='Esta seguro de eliminar la Linea?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteLinea} />
+        <MyDialogDelete Title='Eliminar Linea' Description='¿Estás seguro de eliminar la Linea?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteLinea} />
 
         <Menu
           anchorEl={anchorElMenu}

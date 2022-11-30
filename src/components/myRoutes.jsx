@@ -1,20 +1,25 @@
-import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import React, { useContext } from 'react'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import LineaScreen from '../screens/LineaScreen'
 import RutasScreen from '../screens/RutasScreen'
 import InternoScreen from '../screens/InternoScreen'
-import VueltaScreen from '../screens/VueltaScreen'
-import SocioScreen from '../screens/users/SocioScreen'
-import ConductorScreen from '../screens/users/ConductorScreen'
+import ViajeScreen from '../screens/ViajeScreen'
 import { ControlScreen } from '../screens/ControlScreen'
 import AdminScreen from '../screens/AdminScreen'
 import LoginScreen from '../screens/LoginScreen'
-
-import {PrivateRoutes} from '../utils/PrivateRoutes'
-import DashboardScreen from '../screens/DashboardScreen'
-import { SesionContext } from '../providers/SesionProvider'
 import PerfilLineaScreen from '../screens/PerfilLineaScreen'
 import UserScreen from '../screens/UserScreen'
+//import {PrivateRoutes} from '../utils/PrivateRoutes'
+import DashboardScreen from '../screens/DashboardScreen'
+import { SesionContext } from '../providers/SesionProvider'
+
+
+const PrivateRoutes = () => {
+  const {sesion} =useContext(SesionContext)
+return (
+  sesion ? <Outlet/> : <Navigate to="/login"/>
+)
+}
 
 export const MyRoutes = () => {
 
@@ -40,18 +45,13 @@ export const MyRoutes = () => {
         <Route path="/ruta" element={<RutasScreen />} />
         <Route path="/linea" element={<LineaScreen />} />
         <Route path="/interno" element={<InternoScreen />} />
-        <Route path="/vuelta" element={<VueltaScreen />} />
-        <Route path="/socio" element={<SocioScreen />} />
-        <Route path="/conductor" element={<ConductorScreen />} />
+        <Route path="/vuelta" element={<ViajeScreen />} />
         <Route path="/control" element={<ControlScreen />} />
         <Route path="/admin" element={<AdminScreen />} />
         <Route path="/dashboard" element={<DashboardScreen />} />
         <Route path="/perfillinea" element={<PerfilLineaScreen />} />
         <Route path="/user" element={<UserScreen />} />
-
-
-        <Route path="/*"/>
-
+         <Route path="/*"/>
       </Route>
 
       <Route path="/login" element={<LoginScreen />} />

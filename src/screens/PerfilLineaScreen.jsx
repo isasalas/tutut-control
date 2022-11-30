@@ -39,7 +39,7 @@ const PerfilLineaScreen = () => {
                             <Grid xs={12}>
                                 <Typography variant="h3"> <b>{linea.name}</b> </Typography>
                                 <div style={{ fontSize: '15px' }} >
-                                    Edita el id, nombre, telefono, descripticion, colores y direccion de la nueva linea
+                                    Edita el nombre, telefono, colores y direccion de la linea
                                 </div>
                             </Grid>
                             <Grid xs={4} >

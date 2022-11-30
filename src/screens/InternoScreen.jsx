@@ -103,7 +103,7 @@ const InternoScreen = () => {
     handleCloseDialog();
     if (!interno.name || !interno.userId) return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
     const data = interno;
-    delete data.id; 
+    delete data.id;
     data.lineaId = sesion.lineaId;
     axios.post(urlApi + urlInterno, data)
       .then((response) => { enqueueSnackbar(data.name + " creado con exito", { variant: 'success' }); })
@@ -144,7 +144,7 @@ const InternoScreen = () => {
             ))}
           </Grid>
 
-          <MyDialogCreate Title='Crear Nuevo Interno' Description='Introduce el nombre y socio del Interno' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createInterno}
+          <MyDialogCreate Title='Crear Nuevo Interno' Description='Introduce el nombre del interno y socio' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createInterno}
             Conten={
               <Box >
                 <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2} >
@@ -169,7 +169,7 @@ const InternoScreen = () => {
                 </Grid>
               </Box>} />
 
-          <MyDialogEdit Title='title' Description='Edita el id, nombre, linea y socio del Interno' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editInterno}
+          <MyDialogEdit Title='Editar Interno' Description='Edita el nombre del Interno y socio' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editInterno}
             Conten={
               <Box >
                 <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2} >
@@ -196,7 +196,7 @@ const InternoScreen = () => {
                 </Grid>
               </Box>} />
 
-          <MyDialogDelete Title='title' Description='ola' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteInterno} />
+          <MyDialogDelete Title='Eliminar Interno' Description='¿Estas seguro de eliminar el Interno?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteInterno} />
 
           <Menu anchorEl={anchorElMenu} open={openMenu} onClose={() => { setAnchorElMenu(null) }}>
             <MenuItem onClick={(e) => {
