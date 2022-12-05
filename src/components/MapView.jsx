@@ -134,7 +134,7 @@ const MapView = ({ viaje, ida }) => {
                                 <MarkerF
                                     //opacity={0.9}
                                     icon={{
-                                        url: `http://${MyIp}:5000/assets/images/pin-orange.png`,
+                                        url: `http://${MyIp}:3000/assets/images/pin-orange.png`,
                                         scaledSize: { width: 25, height: 25 }
                                     }}
                                     key={marker.waypoint.location.lat}
@@ -152,7 +152,7 @@ const MapView = ({ viaje, ida }) => {
                         <MarkerF
                             // opacity={0.7}
                             icon={{
-                                url: `http://${MyIp}:5000/assets/images/pin-yellow.png`,
+                                url: `http://${MyIp}:3000/assets/images/pin-yellow.png`,
                                 scaledSize: { width: 25, height: 25 }
                             }}
 

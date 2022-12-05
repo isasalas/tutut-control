@@ -61,17 +61,16 @@ export const ControlScreen = () => {
 
   const deleteControl = (e) => {
     axios.put(urlApi + urlUser + "/" + Control.id, { lineaId: null })
-      .then((response) => { enqueueSnackbar(Control.name + " eliminado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(Control.name + " eliminado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
-    handleCloseDialog();
+
   }
   const createControl = (e) => {
     if (!Control.id) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
     const data = { lineaId: sesion.lineaId };
     axios.put(urlApi + urlUser + "/" + Control.id, data)
-      .then((response) => { enqueueSnackbar(" creado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(" creado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
-    handleCloseDialog();
   }
 
   return (
@@ -115,7 +114,7 @@ export const ControlScreen = () => {
                           if (value) return setControl({ ...Control, id: value.id })
                           return setControl({ ...Control, id: null })
                         }}
-                        renderInput={(params) => (<TextField {...params} label="Socio" variant="standard" />)} />
+                        renderInput={(params) => (<TextField {...params} label="Usuario" variant="standard" />)} />
                     </Grid>
                   </Grid>
                 </Grid>

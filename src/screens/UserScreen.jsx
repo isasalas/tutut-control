@@ -12,7 +12,7 @@ import { MyBanner } from '../components/myBanner';
 import { MySearchName } from '../components/MySearch';
 import { Delete, EditRounded, MoreVertRounded } from '@mui/icons-material';
 import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
- 
+
 const UserScreen = () => {
     const [Users, setUsers] = React.useState(Array);
     const [User, setUser] = React.useState(UserModelJson);
@@ -63,17 +63,16 @@ const UserScreen = () => {
 
     const deleteUser = (e) => {
         axios.delete(urlApi + urlUser + '/' + User.id)
-            .then((response) => { enqueueSnackbar(User.name + " eliminado con exito", { variant: 'success' }); })
+            .then((response) => { enqueueSnackbar(User.name + " eliminado con exito", { variant: 'success' }); handleCloseDialog(); })
             .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
-        handleCloseDialog();
+
     }
 
     const editUser = (e) => {
         if (!User.id || !User.name || !User.lastname || !User.phone || !User.email || !User.password) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
         axios.put(urlApi + urlUser + '/' + User.id, User)
-            .then((response) => { enqueueSnackbar(User.name + " editado con exito", { variant: 'success' }); })
+            .then((response) => { enqueueSnackbar(User.name + " editado con exito", { variant: 'success' }); handleCloseDialog(); })
             .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
-        handleCloseDialog();
     }
 
     const createUser = (e) => {
@@ -86,7 +85,7 @@ const UserScreen = () => {
                 enqueueSnackbar(User.name + " creado con exito", { variant: 'success' });
                 handleCloseDialog();
             })
-            .catch((e) => {console.log(User); enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
+            .catch((e) => { console.log(User); enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
     }
 
     return (

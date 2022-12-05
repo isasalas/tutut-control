@@ -85,28 +85,28 @@ const InternoScreen = () => {
   };
 
   const deleteInterno = (e) => {
-    handleCloseDialog();
+     
     axios.delete(urlApi + urlInterno + "/" + interno.id)
-      .then((response) => { enqueueSnackbar(interno.name + " eliminado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(interno.name + " eliminado con exito", { variant: 'success' }); handleCloseDialog();})
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
 
   const editInterno = (e) => {
-    handleCloseDialog();
+    
     if (!interno.name || !interno.userId) return enqueueSnackbar("No deje espacios en blanco", { variant: 'error' });
     axios.put(urlApi + urlInterno + "/" + interno.id, interno)
-      .then((response) => { enqueueSnackbar(interno.name + " editado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(interno.name + " editado con exito", { variant: 'success' }); handleCloseDialog();})
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
 
   const createInterno = (e) => {
-    handleCloseDialog();
+    
     if (!interno.name || !interno.userId) return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
     const data = interno;
     delete data.id;
     data.lineaId = sesion.lineaId;
     axios.post(urlApi + urlInterno, data)
-      .then((response) => { enqueueSnackbar(data.name + " creado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(data.name + " creado con exito", { variant: 'success' }); handleCloseDialog();})
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
 

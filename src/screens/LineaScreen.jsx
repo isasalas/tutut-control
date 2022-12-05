@@ -19,34 +19,34 @@ import { MyBanner } from '../components/myBanner';
 import MiniDrawer from '../components/mydrawer';
 import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
 
-const lineaModel={
+const lineaModel = {
   name: null,
   description: null,
   direction: { lat: -17.783957, lng: -63.181132 },
   color: { top: 'ffffff', bottom: '3c3c3c' },
   phone: null,
   ida: {
-      origin: {
-          location: { lat: -17.792102, lng: -63.178993 },
-          time: 0
-      },
-      destination: {
-          location: { lat: -17.774608, lng: -63.182515 },
-          time: 0
-      },
-      waypoint: []
+    origin: {
+      location: { lat: -17.792102, lng: -63.178993 },
+      time: 0
+    },
+    destination: {
+      location: { lat: -17.774608, lng: -63.182515 },
+      time: 0
+    },
+    waypoint: []
   },
   vuelta: {
     origin: {
-        location: { lat: -17.774608, lng: -63.182515 },
-        time: 0
+      location: { lat: -17.774608, lng: -63.182515 },
+      time: 0
     },
     destination: {
-        location: { lat: -17.792102, lng: -63.178993 },
-        time: 0
+      location: { lat: -17.792102, lng: -63.178993 },
+      time: 0
     },
-    waypoint: [ ]
-},
+    waypoint: []
+  },
 
 }
 
@@ -111,9 +111,9 @@ const LineaScreen = () => {
     if (Linea.id === "") { return enqueueSnackbar("Seleccione una linea", { variant: 'error' }); }
 
     axios.delete(urlApi + urlLinea + '/' + Linea.id)
-      .then((response) => { enqueueSnackbar(Linea.name + " eliminado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(Linea.name + " eliminado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
-    handleCloseDialog();
+
   }
 
   const editLinea = (e) => {
@@ -123,9 +123,9 @@ const LineaScreen = () => {
     }
 
     axios.put(urlApi + urlLinea + '/' + Linea.id, Linea)
-      .then((response) => { enqueueSnackbar(Linea.name + " editado con exito", { variant: 'success' }); })
+      .then((response) => { enqueueSnackbar(Linea.name + " editado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
-    handleCloseDialog();
+
   }
 
   const createLinea = (e) => {
@@ -140,7 +140,7 @@ const LineaScreen = () => {
 
     axios.post(urlApi + urlLinea, Linea)
       .then((response) => {
-        enqueueSnackbar(Linea.name + " creado con exito", { variant: 'success' }); 
+        enqueueSnackbar(Linea.name + " creado con exito", { variant: 'success' });
         handleCloseDialog();
       }).catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
