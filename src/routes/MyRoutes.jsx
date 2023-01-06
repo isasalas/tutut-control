@@ -10,8 +10,10 @@ import LoginScreen from '../screens/LoginScreen'
 import PerfilLineaScreen from '../screens/PerfilLineaScreen'
 import UserScreen from '../screens/UserScreen'
 //import {PrivateRoutes} from '../utils/PrivateRoutes'
-import DashboardScreen from '../screens/DashboardScreen'
+import TrabajoScreen from '../screens/TrabajoScreen'
 import { SesionContext } from '../providers/SesionProvider'
+import PerfilScreen from '../screens/PerfilScreen'
+import ReseñaScreen from '../screens/ReseñaScreen'
 
 
 const PrivateRoutes = () => {
@@ -23,7 +25,7 @@ return (
 
 export const MyRoutes = () => {
 
-  const {  setSesion } = React.useContext(SesionContext)
+  const { setSesion } = React.useContext(SesionContext)
 
   React.useEffect(()=>{
     window.addEventListener('storage', ()=>{
@@ -45,13 +47,15 @@ export const MyRoutes = () => {
         <Route path="/ruta" element={<RutasScreen />} />
         <Route path="/linea" element={<LineaScreen />} />
         <Route path="/interno" element={<InternoScreen />} />
-        <Route path="/vuelta" element={<ViajeScreen />} />
+        <Route path="/viaje" element={<ViajeScreen />} />
         <Route path="/control" element={<ControlScreen />} />
         <Route path="/admin" element={<AdminScreen />} />
-        <Route path="/dashboard" element={<DashboardScreen />} />
+        <Route path="/trabajo" element={<TrabajoScreen />} />
         <Route path="/perfillinea" element={<PerfilLineaScreen />} />
         <Route path="/user" element={<UserScreen />} />
-         <Route path="/*"/>
+        <Route path="/perfil" element={<PerfilScreen />} />
+        <Route path="/reseña" element={<ReseñaScreen />} />
+        <Route path="/*"/>
       </Route>
 
       <Route path="/login" element={<LoginScreen />} />

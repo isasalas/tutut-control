@@ -1,18 +1,19 @@
-import { BusAlert } from '@mui/icons-material';
-import { Unstable_Grid2 as Grid, Box } from '@mui/material';
-import { GoogleMap, Marker, MarkerF, Polyline, PolylineF } from '@react-google-maps/api'
+import { Unstable_Grid2 as Grid, Box, ListItemText } from '@mui/material';
+import { GoogleMap, MarkerF, PolylineF } from '@react-google-maps/api'
 import React from 'react'
 import Socket from './Socket.io'
 import axios from 'axios';
-import { urlApi, urlGps, urlLinea } from '../api/myApiData';
+import { urlApi, urlGps } from '../api/myApiData';
 import { SesionContext } from '../providers/SesionProvider';
-import { LineaModelJson } from '../models/models';
 import { MapStyleDark } from '../utils/MapStyle';
-import { SvgPin } from '../assets/mySvg';
-import { MyIp } from '../utils/Constantes';
+import pinRed from '../assets/images/pin-red.png';
+import pinGreen from '../assets/images/pin-green.png';
+import pinYellow from '../assets/images/pin-yellow.png';
+import { LocationOn, MoreVertRounded, PushPin } from '@mui/icons-material';
+import { DataGrid } from '@mui/x-data-grid';
+import moment from 'moment';
 
 let defaultLocation = { lat: -17.783598, lng: -63.180524 };
-let dirSerIda, dirRenIda, dirSerVuelta, dirRenVuelta;
 const MapView = ({ viaje, ida }) => {
     const { sesion } = React.useContext(SesionContext)
     const [ruta, setRuta] = React.useState();
@@ -23,24 +24,24 @@ const MapView = ({ viaje, ida }) => {
         //setHistory([])
         //history=[]
         if (ida === true) {
-            setRuta(viaje.ida)
+            setRuta(viaje.ruta.ida)
 
             axios.get(urlApi + urlGps + '/' + viaje.internoId)
                 .then((re) => {
                     var datito = []
                     re.data.map((loc) => {
-                        if (new Date(loc.location.timestamp) >= new Date(viaje.ida.origin.time) && new Date(loc.location.timestamp) < new Date(viaje.ida.destination.time)) { datito.push({ lat: loc.location.latitude, lng: loc.location.longitude }) }
+                        if (new Date(loc.location.timestamp) >= new Date(viaje.ruta.ida.origin.time) && new Date(loc.location.timestamp) < new Date(viaje.ruta.ida.destination.time)) { datito.push({ lat: loc.location.latitude, lng: loc.location.longitude }) }
                     })
                     setHistory(datito)
                 }).catch((e) => { console.log(e) })
         }
         else {
-            setRuta(viaje.vuelta)
+            setRuta(viaje.ruta.vuelta)
             axios.get(urlApi + urlGps + '/' + viaje.internoId)
                 .then((re) => {
                     var datito = []
                     re.data.map((loc) => {
-                        if (new Date(loc.location.timestamp) >= new Date(viaje.vuelta.origin.time) && new Date(loc.location.timestamp) < new Date(viaje.vuelta.destination.time)) { datito.push({ lat: loc.location.latitude, lng: loc.location.longitude }) }
+                        if (new Date(loc.location.timestamp) >= new Date(viaje.ruta.vuelta.origin.time) && new Date(loc.location.timestamp) < new Date(viaje.ruta.vuelta.destination.time)) { datito.push({ lat: loc.location.latitude, lng: loc.location.longitude }) }
                     })
                     setHistory(datito)
                 }).catch((e) => { console.log(e) })
@@ -54,17 +55,19 @@ const MapView = ({ viaje, ida }) => {
 
     React.useEffect(() => {
 
+
+
         Socket.on("gps", gpsNew => {
             if (gpsNew.internoId === viaje.internoId && ruta != null && new Date() >= new Date(ruta.origin.time) && new Date() < new Date(ruta.destination.time)) {
                 //console.log({lat:gpsNew.location.latitude, lng:gpsNew.location.longitude})
                 setGps(gpsNew)
-                
-                    //setHistory([{ lat: gpsNew.location.latitude, lng: gpsNew.location.longitude },...history])
-                
-               /* var his=history
-                his.push({ lat: gpsNew.location.latitude, lng: gpsNew.location.longitude })
-                setHistory(his)*/
-               // setHistory([...history, { lat: gpsNew.location.latitude, lng: gpsNew.location.longitude }])
+
+                //setHistory([{ lat: gpsNew.location.latitude, lng: gpsNew.location.longitude },...history])
+
+                /* var his=history
+                 his.push({ lat: gpsNew.location.latitude, lng: gpsNew.location.longitude })
+                 setHistory(his)*/
+                // setHistory([...history, { lat: gpsNew.location.latitude, lng: gpsNew.location.longitude }])
                 /*if(ruta)
                { axios.get(urlApi + urlGps + '/' + viaje.internoId)
                     .then((re) => {
@@ -78,16 +81,71 @@ const MapView = ({ viaje, ida }) => {
             }
 
         })
-        return () => { Socket.off() } 
-    }, [ruta,gps])
+        return () => { Socket.off() }
+    }, [ruta, gps])
+
+
+    const columns = [
+        { field: 'id', headerName: 'ID', width: 50 },
+
+        {
+            field: 'hora',
+            headerName: 'Hora',
+            description: 'Interno asignado para el viaje.',
+            width: 150,
+            valueGetter: (dat) => moment(dat.row.time).format("hh:mm A")
+        },
+        {
+            field: 'marked',
+            headerName: 'Marcador',
+            description: 'Conductor asignado para el viaje.',
+            width: 150,
+            valueGetter: (dat) => {
+                if (dat.row.marked) { return moment(dat.row.marked).format("hh:mm A") }
+                else { return '--' }
+            }
+            //type: 'boolean',
+        },
+        {
+            field: 'm',
+            headerName: 'Minutos',
+            description: 'Hora a la que iniciará el viaje.',
+            width: 150,
+            valueGetter: (dat) => {
+                if (dat.row.marked) return Math.round((new Date(dat.row.time).getTime() - new Date(dat.row.marked).getTime()) / 1000 / 60)
+                else return '--'
+            }
+
+        }
+
+    ];
+
+    const markeds = (rut) => {
+        var a = 0;
+        var array = []
+        array.push({ ...rut.origin, id: a++ })
+        rut.waypoints.map(dat => {
+            if (dat.waypoint.stopover === true) {
+                array.push({ ...dat, id: a++ })
+            }
+        })
+        array.push({ ...rut.destination, id: a++ })
+        //console.log(array)
+        return array
+    }
 
     if (!viaje || !ruta) return <></>
     return (
         <Box >
             <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
+                <Box sx={{ height: "65vh", width: '100%', marginBottom:2 }}>
+                    <DataGrid
+                        rows={markeds(ruta)}
+                        columns={columns}
+                    />
+                </Box>
                 <Grid container xs={12} width='1000px'>
                     <GoogleMap
-
                         //center={{ lat: gps.location.latitude, lng: gps.location.longitude }}
                         center={defaultLocation}
                         options={{ styles: MapStyleDark, mapTypeControl: false, streetViewControl: false }}
@@ -112,9 +170,10 @@ const MapView = ({ viaje, ida }) => {
 
                         <PolylineF path={ruta.route} options={{ strokeColor: '#0398fc', strokeOpacity: 0.5, strokeWeight: 4 }}></PolylineF>
                         <MarkerF
+
                             icon={{
-                                url: 'https://cdn-icons-png.flaticon.com/512/2377/2377922.png',
-                                scaledSize: { width: 25, height: 25 }
+                                url: pinRed,
+                                scaledSize: { width: 30, height: 30 }
                             }}
                             position={{
                                 lat: ruta.origin.location.lat,
@@ -134,8 +193,8 @@ const MapView = ({ viaje, ida }) => {
                                 <MarkerF
                                     //opacity={0.9}
                                     icon={{
-                                        url: `http://${MyIp}:3000/assets/images/pin-orange.png`,
-                                        scaledSize: { width: 25, height: 25 }
+                                        url: pinYellow,
+                                        scaledSize: { width: 30, height: 30 }
                                     }}
                                     key={marker.waypoint.location.lat}
                                     position={{
@@ -152,8 +211,8 @@ const MapView = ({ viaje, ida }) => {
                         <MarkerF
                             // opacity={0.7}
                             icon={{
-                                url: `http://${MyIp}:3000/assets/images/pin-yellow.png`,
-                                scaledSize: { width: 25, height: 25 }
+                                url: pinGreen,
+                                scaledSize: { width: 30, height: 30 }
                             }}
 
                             position={{
@@ -176,6 +235,73 @@ const MapView = ({ viaje, ida }) => {
                     </GoogleMap>
 
                 </Grid>
+
+                {/*<Grid container xs={12}>
+
+                    <Grid xs={1}>
+                        <LocationOn />
+                    </Grid>
+                    <Grid xs={2}>
+                        <ListItemText
+                            primary={
+                                !ruta.origin.marked ? '--' :
+                                    Math.round((new Date(ruta.origin.time).getTime() - new Date(ruta.origin.marked).getTime()) / 1000 / 60) + ' m.'
+                            }
+                        />
+                    </Grid>
+                    <Grid xs={6}>
+                        <ListItemText
+                            secondary={'Hora: '
+                                + new Date(ruta.origin.time).getHours().toString().padStart(2, '0') + ":"
+                                + new Date(ruta.origin.time).getMinutes().toString().padStart(2, '0')}
+                        />
+                        <ListItemText
+                            secondary={'\nMarcado: '
+                                + (!ruta.origin.marked ? '--' : new Date(ruta.origin.marked).getHours().toString().padStart(2, '0') + ":"
+                                    + new Date(ruta.origin.marked).getMinutes().toString().padStart(2, '0'))}
+                        />
+                    </Grid>
+                </Grid>
+
+
+
+                {ruta.waypoints.map((dat) => (
+                    (dat.waypoint.stopover === true) ?
+                        <Grid xs={12}>
+                            <ListItemText
+                                key={dat.waypoint.location.lat}
+                                primary={
+                                    !dat.marked ? '--' :
+                                        Math.round((new Date(dat.time).getTime() - new Date(dat.marked).getTime()) / 1000 / 60) + ' m.'}
+                                secondary={'Hora: '
+                                    + new Date(dat.time).getHours().toString().padStart(2, '0') + ":"
+                                    + new Date(dat.time).getMinutes().toString().padStart(2, '0')
+                                    + '\nMarcado: '
+                                    + (!dat.marked ? '--' :
+                                        +new Date(dat.marked).getHours().toString().padStart(2, '0') + ":"
+                                        + new Date(dat.marked).getMinutes().toString().padStart(2, '0'))}
+
+                            />
+                        </Grid> : null
+                ))}
+                <Grid container xs={12}>
+                    <Grid xs={12}>
+                        <ListItemText
+                            primary={
+                                !ruta.destination.marked ? '--' :
+                                    Math.round((new Date(ruta.destination.time).getTime() - new Date(ruta.destination.marked).getTime()) / 1000 / 60) + ' m.'
+
+                            }
+                            secondary={'Hora: '
+                                + new Date(ruta.destination.time).getHours().toString().padStart(2, '0') + ":"
+                                + new Date(ruta.destination.time).getMinutes().toString().padStart(2, '0')
+                                + '\nMarcado: '
+                                + (!ruta.destination.marked ? '--' :
+                                    + new Date(ruta.destination.marked).getHours().toString().padStart(2, '0') + ":"
+                                    + new Date(ruta.destination.marked).getMinutes().toString().padStart(2, '0'))}
+
+                        /></Grid>
+                </Grid>*/}
 
             </Grid>
         </Box>

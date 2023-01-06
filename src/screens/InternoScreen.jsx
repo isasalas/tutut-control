@@ -17,9 +17,8 @@ import MiniDrawer from '../components/mydrawer';
 import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
 import { SesionContext } from '../providers/SesionProvider';
 
-
 const InternoScreen = () => {
-  const {sesion } = React.useContext(SesionContext)
+  const { sesion } = React.useContext(SesionContext)
 
   const [anchorElMenu, setAnchorElMenu] = React.useState(null);
   //const [Internos, setInternos] = React.useState(Array);
@@ -34,8 +33,27 @@ const InternoScreen = () => {
   const [openDialogEdit, setOpenDialogEdit] = React.useState(false);
   const [openDialogDelete, setOpenDialogDelete] = React.useState(false);
 
-
   const [scrollDialog, setScrollDialog] = React.useState('paper');
+
+  const descriptionElementRef = React.useRef(null);
+  const openMenu = Boolean(anchorElMenu);
+
+  React.useEffect(() => {
+    axios.get(urlApi + urlUser)
+      .then((response) => {
+        const usersFilter = response.data.filter((val) => { if (val.admin === false && !val.lineaId) return val })
+        setUsers(usersFilter);
+      }).catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
+    axios.get(urlApi + urlLinea + urlInterno + "/" + sesion.linea.id)
+      .then((response) => {
+        //const internoFilter = response.data.internos;
+        setLinea(response.data);
+      }).catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
+    if (openDialogCreate || openDialogEdit || openDialogDelete) {
+      const { current: descriptionElement } = descriptionElementRef;
+      if (descriptionElement !== null) { descriptionElement.focus(); }
+    }
+  }, [openDialogCreate, openDialogEdit, openDialogDelete]);
 
   const handleClickOpenDialogCreate = (scrollType) => () => {
     setOpenDialogCreate(true);
@@ -49,31 +67,6 @@ const InternoScreen = () => {
     setOpenDialogDelete(false);
   };
 
-  const descriptionElementRef = React.useRef(null);
-  const openMenu = Boolean(anchorElMenu);
-
-  React.useEffect(() => {
-
-    axios.get(urlApi + urlUser)
-    .then((response) => {
-      const usersFilter = response.data.filter((val) => { if (val.admin === false && !val.lineaId) return val })
-      setUsers(usersFilter);
-    }).catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
-
-    axios.get(urlApi + urlLinea + urlInterno + "/" + sesion.lineaId)
-    .then((response) => {
-      //const internoFilter = response.data.internos;
-      setLinea(response.data);
-    }).catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); });
-
-    if (openDialogCreate || openDialogEdit || openDialogDelete) {
-      const { current: descriptionElement } = descriptionElementRef;
-      if (descriptionElement !== null) { descriptionElement.focus(); }
-    }
-  }, [openDialogCreate,openDialogEdit,openDialogDelete]);
-
-
-
   const handleClickMenu = ({ data, event }) => {
     setAnchorElMenu(event.currentTarget);
     setInterno(data);
@@ -81,38 +74,35 @@ const InternoScreen = () => {
 
   const defaultProps = {
     options: users,
-    getOptionLabel: (option) => option.id,
+    getOptionLabel: (option) => option.id + " " + option.name + " " + option.lastname,
   };
 
   const deleteInterno = (e) => {
-     
     axios.delete(urlApi + urlInterno + "/" + interno.id)
-      .then((response) => { enqueueSnackbar(interno.name + " eliminado con exito", { variant: 'success' }); handleCloseDialog();})
+      .then((response) => { enqueueSnackbar(interno.name + " eliminado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
 
   const editInterno = (e) => {
-    
     if (!interno.name || !interno.userId) return enqueueSnackbar("No deje espacios en blanco", { variant: 'error' });
     axios.put(urlApi + urlInterno + "/" + interno.id, interno)
-      .then((response) => { enqueueSnackbar(interno.name + " editado con exito", { variant: 'success' }); handleCloseDialog();})
+      .then((response) => { enqueueSnackbar(interno.name + " editado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
 
   const createInterno = (e) => {
-    
     if (!interno.name || !interno.userId) return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
     const data = interno;
     delete data.id;
-    data.lineaId = sesion.lineaId;
+    data.lineaId = sesion.linea.id;
     axios.post(urlApi + urlInterno, data)
-      .then((response) => { enqueueSnackbar(data.name + " creado con exito", { variant: 'success' }); handleCloseDialog();})
+      .then((response) => { enqueueSnackbar(data.name + " creado con exito", { variant: 'success' }); handleCloseDialog(); })
       .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
   }
 
   return (
     <MiniDrawer Contend={
-      !Linea ? <div>cargando...</div> :
+      !Linea.internos ? <div>cargando...</div> :
         <Box >
           <MyBanner
             OpenDialogCreate={handleClickOpenDialogCreate}
@@ -121,14 +111,17 @@ const InternoScreen = () => {
             MyDescription={"Administre los internos de la " + Linea.name}
             MyBuutonText={"Crear Nuevo Interno"}
           />
+
           <Divider />
-          <Grid container columnSpacing={3} >
+
+          <Grid container >
             {Linea.internos.map((data) => (
-              <Grid container key={data.id} display="flex" justifyContent="space-between" alignItems="center" columnSpacing={2} xs={12} sm={6} md={4} lg={3} xl={2}>
+              <Grid container key={data.id} display="flex" justifyContent="space-between" alignItems="center" xs={12} sm={6} md={4} lg={3} xl={2}>
+                <Grid xs={0.5} />
                 <Grid xs={2}>
                   <ListItemText primary={<Typography variant="h6">{data.name}</Typography>} />
                 </Grid>
-                <Grid xs={8} justifyContent="start">
+                <Grid xs={7} justifyContent="start">
                   <ListItemText secondary={"Id: " + data.id} />
                   <ListItemText secondary={"Socio: " + data.user.id} />
                 </Grid>
@@ -137,8 +130,9 @@ const InternoScreen = () => {
                     <MoreVertRounded />
                   </IconButton>
                 </Grid>
-                <Grid xs={12}>
-                  <Divider variant="mind" />
+                <Grid xs={0.5} />
+                <Grid xs={12} >
+                  <Divider variant="mind" sx={{ marginX: 1 }} />
                 </Grid>
               </Grid>
             ))}
@@ -168,7 +162,6 @@ const InternoScreen = () => {
                   </Grid>
                 </Grid>
               </Box>} />
-
           <MyDialogEdit Title='Editar Interno' Description='Edita el nombre del Interno y socio' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editInterno}
             Conten={
               <Box >
@@ -198,7 +191,7 @@ const InternoScreen = () => {
 
           <MyDialogDelete Title='Eliminar Interno' Description='¿Estas seguro de eliminar el Interno?' openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteInterno} />
 
-          <Menu anchorEl={anchorElMenu} open={openMenu} onClose={() => { setAnchorElMenu(null) }}>
+          <Menu anchorEl={anchorElMenu} open={openMenu} onClose={() => { setInterno(InternoModelJson); setAnchorElMenu(null) }}>
             <MenuItem onClick={(e) => {
               setOpenDialogEdit(true);
               setScrollDialog('paper');

@@ -4,12 +4,12 @@ import {
 } from '@mui/material';
 import { SesionContext } from '../providers/SesionProvider';
 import { MySvgControlGps, MySvgMinibus } from '../assets/mySvg';
-import { LineAxis, NavigateNextRounded } from '@mui/icons-material';
+import { NavigateNextRounded } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { urlApi, urlLinea, urlUser } from '../api/myApiData';
 
-const DashboardScreen = () => {
+const TrabajoScreen = () => {
     const { setSesion, sesion } = React.useContext(SesionContext)
     const [lineas, setLineas] = React.useState();
     const navigater = useNavigate();
@@ -21,16 +21,30 @@ const DashboardScreen = () => {
                     setLineas(response.data)
                 });
         }
-        else{
-            navigater("/interno", { replace: true });
+        else {
+            axios.get(urlApi + urlUser + "/" + sesion.id)
+                .then((res) => {
+                    if (res.data.controls.length > 0) {
+                        setLineas(res.data.controls.map((e) => { return e.linea }))
+                    }
+                });
         }
-    },[])
+    }, [])
 
     React.useEffect(() => {
-        if (sesion.lineaId) {
+        if (sesion.linea) {
             navigater("/interno", { replace: true });
         }
     }, [sesion])
+
+    const onClickLinea = (linea) => {
+        const data = sesion;
+        data.linea = linea;
+        //data.linea = linea;
+        window.localStorage.setItem('sesion', JSON.stringify(data))
+        setSesion({ ...sesion, linea: linea });
+    }
+
 
     if (!lineas) return <>cargando</>
 
@@ -41,7 +55,7 @@ const DashboardScreen = () => {
                     <Grid order={{ xs: 1, sm: 2 }} xs={6} sm={8} >
                         <Typography variant="h3"> <b>Lineas</b> </Typography>
                         <div style={{ fontSize: '15px' }} >
-                            Escoge la linea
+                            Escoge la linea con la que deseas trabajar
                         </div>
                     </Grid>
                     <Grid order={{ xs: 2, sm: 1 }} container xs={6} sm={4} maxWidth={200} >
@@ -52,21 +66,14 @@ const DashboardScreen = () => {
                 </Grid>
                 {lineas.map((linea) => (
                     <Grid container key={linea.id} display="flex" justifyContent="space-between" alignItems="center" columnSpacing={2} xs={12} sm={6} md={4} lg={3} xl={2}>
-
-                        <Grid xs={3} style={{ maxHeight: '50px', paddingLeft: '15px' }}>
+                        <Grid xs={3} style={{ maxHeight: '50px', paddingLeft: '15px' }} >
                             <MySvgMinibus style={{ maxHeight: '50px' }} top={linea.color.top} bottom={linea.color.bottom} />
                         </Grid>
                         <Grid xs={8}>
                             <ListItemText primary={<Typography variant="h6">{linea.name}</Typography>} secondary={linea.id} />
                         </Grid>
-                        <Grid xs={1} display="flex" justifyContent="center" alignItems="center">
-                            <IconButton aria-label="comment" onClick={() => {
-                                const data = sesion;
-                                data.lineaId = linea.id;
-                                //data.linea = linea;
-                                window.localStorage.setItem('sesion', JSON.stringify(data))
-                                setSesion({ ...sesion, lineaId: linea.id});
-                            }}>
+                        <Grid xs={1} display="flex" justifyContent="center" alignItems="center" >
+                            <IconButton aria-label="comment" onClick={(e) => { onClickLinea(linea) }}>
                                 <NavigateNextRounded />
                             </IconButton>
                         </Grid>
@@ -77,4 +84,4 @@ const DashboardScreen = () => {
         </Box>
     )
 }
-export default DashboardScreen
+export default TrabajoScreen

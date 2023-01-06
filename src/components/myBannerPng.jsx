@@ -5,10 +5,10 @@ import PropTypes from 'prop-types';
 
 
 
-export const MyBanner = (props) => {
+export const MyBannerPng = (props) => {
 
     const handleClickOpenDialogCreate = props.OpenDialogCreate;
-    const MySvg = props.MySvg;
+    const MyPng = props.MyPng;
     const MyTitle = props.MyTitle;
     const MyDescription = props.MyDescription;
     const MyBuutonText = props.MyBuutonText;
@@ -22,17 +22,15 @@ export const MyBanner = (props) => {
             alignItems="center"
             columnSpacing={3}
             rowSpacing={0.5}
-            >
-
+        >
             <Grid container
                 xs={4}
                 sm={4}
-                maxWidth={200}  >
+                maxWidth={250} >
                 <Grid xs={12} >
-                    {MySvg}
+                    <img style={{ maxWidth: '100%' }} src={MyPng} alt='refresh' ></img>
                 </Grid>
             </Grid>
-
             <Grid xs={8} sm={8} textAlign={{ xs: 'center', sm: 'left' }}>
                 <Typography fontSize={{ xs: 35, md: 50 }} >
                     <b>{MyTitle}</b>
@@ -48,6 +46,7 @@ export const MyBanner = (props) => {
                         {MyBuutonText}
                     </Button>
                 </Grid>
+
             </Grid>
             <Grid display={{ xs: "block", sm: "none" }} xs={12} >
                 <Button fullWidth variant="contained"
@@ -57,14 +56,15 @@ export const MyBanner = (props) => {
                     {MyBuutonText}
                 </Button>
             </Grid>
+
         </Grid>
 
     )
 }
 
-MyBanner.propTypes = {
+MyBannerPng.propTypes = {
     OpenDialogCreate: PropTypes.func.isRequired,
-    MySvg: PropTypes.object.isRequired,
+    MyPng: PropTypes.object.isRequired,
     MyTitle: PropTypes.string.isRequired,
     MyDescription: PropTypes.string.isRequired,
     MyBuutonText: PropTypes.string.isRequired,

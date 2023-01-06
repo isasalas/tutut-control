@@ -1,17 +1,26 @@
 import * as React from 'react';
 import axios from 'axios';
 import {
-  Box, Button, Divider, TextField, Typography, Unstable_Grid2 as Grid2, InputAdornment, Switch
+  Box, Button, Divider, TextField, Typography, Unstable_Grid2 as Grid2, InputAdornment, Switch, Autocomplete, IconButton, ListItemText
 } from '@mui/material';
 import {
   Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineDot, TimelineOppositeContent, TimelineContent, timelineOppositeContentClasses
 } from '@mui/lab';
 import MiniDrawer from '../components/mydrawer';
 import { GoogleMap } from '@react-google-maps/api';
-import { urlApi, urlLinea } from '../api/myApiData';
+import { urlApi, urlLinea, urlRuta } from '../api/myApiData';
 import { SesionContext } from '../providers/SesionProvider';
-import { LineaModelJson } from '../models/models';
+import { LineaModelJson, RutaModelJson } from '../models/models';
 import { useSnackbar } from 'notistack';
+import { MyBannerPng } from '../components/myBannerPng';
+import { MySvgLinea, SvgPin } from '../assets/mySvg';
+import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
+import { Beenhere, Check, CheckCircle, Delete, EditRounded, Save } from '@mui/icons-material';
+import RutasView from '../components/RutasView';
+import { DataGrid } from '@mui/x-data-grid';
+import moment from 'moment';
+import rutaPng from '../assets/images/maps.png';
+
 
 let dirSerIda, dirRenIda, dirSerVuelta, dirRenVuelta;
 let alphabet = 'ABCDEFGHIJKLMNOPQRSTUXYZ';
@@ -19,7 +28,10 @@ let defaultLocation = { lat: -17.783598, lng: -63.180524 };
 
 const RutasScreen = () => {
   const { sesion } = React.useContext(SesionContext)
-  const [Linea, setLinea] = React.useState(LineaModelJson)
+  //const [dirSer, setDirSer] = React.useState({ dirSerIda: null, dirRenIda: null, dirSerVuelta: null, dirRenVuelta: null })
+  const [ruta, setRuta] = React.useState(RutaModelJson)
+  //const [newRuta, setNewRuta] = React.useState(RutaModelJson)
+  const [rutas, setRutas] = React.useState([])
   const [SwitchOn, setSwitchOn] = React.useState({
     on: true,
     label: "Ruta de Ida",
@@ -27,108 +39,50 @@ const RutasScreen = () => {
     displayVuelta: 'none'
   })
 
+  const [openDialogCreate, setOpenDialogCreate] = React.useState(false);
+  const [openDialogEdit, setOpenDialogEdit] = React.useState(false);
+  const [openDialogDelete, setOpenDialogDelete] = React.useState(false);
+  const [openDialogActivate, setOpenDialogActivate] = React.useState(false);
+
+  const [scrollDialog, setScrollDialog] = React.useState('paper');
+  const [activeButton, setActiveButton] = React.useState('none');
+
   const { enqueueSnackbar } = useSnackbar();
-  React.useEffect(() => {
-    axios.get(urlApi + urlLinea + "/" + sesion.lineaId)
-      .then((re) => { setLinea(re.data); })
-  }, [])
-  React.useEffect(() => {
-  }, [Linea, SwitchOn])
-  function initMap({ map, dirSer, dirRen, ruta, type }) {
-    dirSer = new window.google.maps.DirectionsService();
-    dirRen = new window.google.maps.DirectionsRenderer({ draggable: true, map: map, });
-    dirRen.addListener("directions_changed", function (e) {
-      var directions = dirRen.getDirections();
 
-      //directions.routes[0].overview_path.map((dir)=>{console.log(dir.toJSON())})
-
-      if (directions) {
-        try { directions.request.destination = directions.request.destination.location.toJSON() } catch { directions.request.destination = directions.request.destination.toJSON() }
-        try { directions.request.origin = directions.request.origin.location.toJSON() } catch { directions.request.origin = directions.request.origin.toJSON() }
-
-        directions.request.waypoints = directions.request.waypoints.map((loc) => {
-          try { return { location: loc.location.toJSON(), stopover: loc.stopover } }
-          catch { return { location: loc.location.location.toJSON(), stopover: loc.stopover } }
-        })
-        ruta.origin.location = directions.request.origin
-        ruta.destination.location = directions.request.destination
-        ruta.route = directions.routes[0].overview_path.map((dir) => { return dir.toJSON() })
-        var i = -1;
-        var time = ruta.waypoints.filter((point) => {
-          if (point.waypoint.stopover === true) { return point.time }
-        }).map((point) => { return point.time })
-        ruta.polyline = directions.routes[0].overview_polyline;
-
-        ruta.waypoints = directions.request.waypoints.map(
-          (point) => {
-            if (point.stopover === true) {
-              i++
-              return { waypoint: point, time: time[i] }
-            }
-            else { return { waypoint: point } }
-          }
-        )
-        console.log(Linea.vuelta)
-        console.log(Linea.ida)
-        if (type === true) { setLinea({ ...Linea, ida: ruta }) }
-        else { setLinea({ ...Linea, vuelta: ruta }) }
-      }
-    });
-
-    map.addListener("click", function (e) {
-      ruta.waypoints.push({
-        waypoint: { location: e.latLng.toJSON(), stopover: true },
-        time: 5
-      });
-      createDirection({ dirRen: dirRen, dirSer: dirSer, ruta: ruta })
-    });
-    createDirection({ dirRen: dirRen, dirSer: dirSer, ruta: ruta })
-  }
-
-  const createDirection = ({ ruta, dirSer, dirRen }) => {
-    dirSer.route({
-      origin: ruta.origin.location,
-      destination: ruta.destination.location,
-      travelMode: window.google.maps.TravelMode.DRIVING,
-      waypoints: ruta.waypoints.map((point) => { return point.waypoint })
-    })
-      .then(function (result) { dirRen.setDirections(result) })
-      .catch(function (e) { alert("error: " + e) });
-  }
-
-  const initMapIda = (map) => {
-    initMap({ map: map, dirRen: dirRenIda, dirSer: dirSerIda, ruta: Linea.ida, type: true })
-  }
-
-  const initMapVuelta = (map) => {
-    initMap({ map: map, dirRen: dirRenVuelta, dirSer: dirSerVuelta, ruta: Linea.vuelta, type: false })
-  }
-
-  const GuardarRutaIda = () => {
-    console.log(Linea.ida.waypoints)
-    axios.put(urlApi + urlLinea + "/" + sesion.lineaId, { ida: Linea.ida })
-      .then((re) => {
-        enqueueSnackbar("editado con exito", { variant: 'success' });
-        setLinea(re.data);
-      })
-      .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); })
-  }
-
-  const GuardarRutaVuelta = () => {
-    axios.put(urlApi + urlLinea + "/" + sesion.lineaId, { vuelta: Linea.vuelta })
-      .then((re) => {
-        enqueueSnackbar("editado con exito", { variant: 'success' });
-        setLinea(re.data);
-      })
-      .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); })
-  }
-
+  const defaultProps = { options: rutas, getOptionLabel: (option) => option.id + " " + option.name }
 
   var indiceParadaIda = 1
   var indiceParadaVuelta = 1
 
+  React.useEffect(() => {
+    actualizarLista()
+  }, [])
 
+  React.useEffect(() => {
+    if (ruta.status === true) setActiveButton("none")
+    else setActiveButton("flex")
+  }, [ruta, SwitchOn])
 
+  const handleClickOpenDialogCreate = (scrollType) => () => {
+    setOpenDialogCreate(true);
+    setScrollDialog(scrollType);
+  };
+
+  const actualizarLista = () => {
+    axios.get(urlApi + urlRuta + urlLinea + "/" + sesion.linea.id)
+      .then((re) => {
+        //setRuta(re.data.find(e => e.status === true));
+        setRutas(re.data);
+      })
+  }
+
+  const handleCloseDialog = () => {
+    setRuta(RutaModelJson);
+    setOpenDialogCreate(false);
+    setOpenDialogEdit(false);
+    setOpenDialogDelete(false);
+    setOpenDialogActivate(false)
+  };
 
   const switchChange = () => {
     if (SwitchOn.on) {
@@ -149,225 +103,201 @@ const RutasScreen = () => {
     }
   }
 
+  const createRuta = () => {
+    if (!ruta.name
+      || !ruta.description) {
+      return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
+    }
+    const dat = ruta;
+    delete dat.id
+    dat.lineaId = sesion.linea.id
+    dat.status = false
+    axios.post(urlApi + urlRuta, dat)
+      .then((response) => {
+        enqueueSnackbar(ruta.name + " creado con exito", { variant: 'success' });
+        handleCloseDialog();
+        setRuta({ ...ruta, id: null })
+        actualizarLista()
+      }).catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
+  }
+  const editRuta = () => {
+    if (!ruta.name
+      || !ruta.description) {
+      return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' });
+    }
+    console.log(ruta.ida)
+    console.log(ruta.vuelta)
+    axios.put(urlApi + urlRuta + "/" + ruta.id, { ida: ruta.ida, vuelta: ruta.vuelta })
+      .then((re) => {
+        enqueueSnackbar("editado con exito", { variant: 'success' });
+        handleCloseDialog();
+        setRuta(re.data);
+      })
+      .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); })
+  }
+
+  const deleteRuta = () => {
+    if (ruta.status === true) return enqueueSnackbar("Esta ruta está activa, activa otra primero para eliminar", { variant: 'error' });
+    axios.delete(urlApi + urlRuta + "/" + ruta.id)
+      .then((response) => {
+        enqueueSnackbar(ruta.name + " eliminado con exito", { variant: 'success' });
+        handleCloseDialog();
+        actualizarLista()
+      }).catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
+  }
+
+  const activateRuta = () => {
+    axios.get(urlApi + urlRuta + "/" + ruta.id + "/" + sesion.linea.id)
+      .then((re) => {
+        enqueueSnackbar("activado con exito", { variant: 'success' });
+        handleCloseDialog();
+        actualizarLista()
+      })
+      .catch((e) => { enqueueSnackbar(JSON.stringify(e.message), { variant: 'error' }); })
+  }
+
+  const columns = [
+    { field: 'id', headerName: 'ID', width: 50 },
+    {
+      field: 'name',
+      headerName: 'Nombre',
+      description: 'Nombre asignado a la ruta.',
+      width: 150,
+      editable: true,
+    },
+    {
+      field: 'description',
+      headerName: 'Decripción',
+      description: 'Decripción de la ruta.',
+      width: 350,
+      editable: true,
+    },
+    {
+      field: 'status',
+      headerName: 'Activo',
+      description: 'Solo puede aver una ruta activa para cada linea.',
+      width: 100,
+      //valueGetter: (rut) =>{ if(rut.row.status===true) {return "activo"}else{return "inactivo"}}
+      type: 'boolean',
+    },
+    {
+      field: 'createAt',
+      headerName: 'Creado',
+      description: 'Fecha de creación del viaje.',
+      width: 200,
+      valueGetter: (rut) => moment(rut.row.createdAt).format("DD/MM/YYYY hh:mm A")
+    },
+    {
+      field: 'updateAt',
+      headerName: 'Editado',
+      description: 'Última fecha de edición del viaje.',
+      width: 200,
+      valueGetter: (rut) => moment(rut.row.updatedAt).format("DD/MM/YYYY hh:mm A")
+    },
+    {
+      field: "action",
+      headerName: "Opciones",
+      description: 'Opciones para interactuar con los datos de la ruta.',
+      sortable: false,
+      width: 150,
+      renderCell: (params) => {
+        return <Box>
+          <IconButton name='olas' onClick={(e) => { setRuta(params.row); setOpenDialogEdit(true); setScrollDialog('paper'); }}>
+            <EditRounded />
+          </IconButton>
+          <IconButton onClick={(e) => { setRuta(params.row); setOpenDialogDelete(true); setScrollDialog('paper'); }}>
+            <Delete />
+          </IconButton>
+          {params.row.status === true ? null : <IconButton onClick={(e) => { setRuta(params.row); setOpenDialogActivate(true); setScrollDialog('paper'); }}>
+            <Check />
+          </IconButton>}
+        </Box>;
+      }
+    },
+  ];
+
   return (
     <MiniDrawer Contend={
 
-      !Linea.id ? <></> :
-        <Box >
-          <Grid2 container columnSpacing={2} rowSpacing={1}>
-            <Grid2 container xs={12} sm={6}>
-              <Switch xs={6} checked={SwitchOn.on} onChange={switchChange} name="gilad" />
-              <Typography variant="h6" xs={6}>
-                <b>{SwitchOn.label}</b>
-              </Typography>
-            </Grid2>
-            <Grid2 container xs={12} display={SwitchOn.displayIda}>
-              <Grid2 xs={12} sm={8}  >
-                {!Linea.ida ? <></> :
-                  <GoogleMap
-                    center={defaultLocation}
-                    options={{ mapTypeControl: false, zoom: 13 }}
-                    onLoad={(map) => initMapIda(map)}
-                    mapContainerStyle={{ height: '480px', width: '100%', marginBottom: 8 }}
-                  >
-                  </GoogleMap>} 
-              </Grid2>
 
-              <Grid2 xs={12} sm={4} >
-                <Timeline
-                  sx={{
-                    m: 0,
-                    mb: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    height: 440,
-                    overflow: "hidden",
-                    overflowY: "scroll",
+      <Box >
+        <MyBannerPng
+          OpenDialogCreate={handleClickOpenDialogCreate}
+          MyPng={rutaPng}
+          MyTitle='Rutas'
+          MyDescription={'Aquí podras administrar las rutas de la Linea'}
+          MyBuutonText='Crear Ruta' />
+        
 
-                  }}
-                >
-                  <TimelineItem>
-                    <TimelineOppositeContent children={"-"} color="textSecondary" />
-                    <TimelineSeparator> <TimelineDot variant="outlined" color="warning" /> <TimelineConnector />  </TimelineSeparator>
-                    <TimelineContent>Salida A</TimelineContent>
-                  </TimelineItem>
-                  {
-                    Linea.ida.waypoints.map((point, index) => {
-                      if (point.waypoint.stopover === true) {
-                        return <TimelineItem key={index}>
-                          <TimelineOppositeContent color="textSecondary">
-                            <TextField variant='standard' size='small' sx={{ width: '45px' }}
-                              value={Linea.ida.waypoints[index].time.toString()}
-                              InputProps={{ endAdornment: <InputAdornment position="end">m.</InputAdornment> }}
-                              onChange={e => {
-                                var ida = Linea.ida;
-                                ida.waypoints[index].time = parseInt(e.target.value?e.target.value:0)
-                                //console.log( e.target.value)
-                                setLinea({ ...Linea, ida: ida })
-                              }}
-                            />
-                          </TimelineOppositeContent>
-                          <TimelineSeparator> <TimelineDot variant="outlined" color="error" /> <TimelineConnector />  </TimelineSeparator>
-                          <TimelineContent>{"Stop " + alphabet[indiceParadaIda++]}</TimelineContent>
-                        </TimelineItem>
-                      }
-                    })
-                  }
 
-                  <TimelineItem>
-                    <TimelineOppositeContent color="textSecondary">
-                      <TextField variant='standard' size='small' sx={{ width: '45px' }}
-                        value={Linea.ida.destination.time.toString()}
-                        InputProps={{ endAdornment: <InputAdornment position="end">m.</InputAdornment> }}
-                        onChange={e => {
-                          var ida = Linea.ida;
-                          ida.destination.time = parseInt(e.target.value?e.target.value:0)
-                          setLinea({ ...Linea, ida: ida })
-                        }}
-                      />
-                    </TimelineOppositeContent>
-                    <TimelineSeparator> <TimelineDot color="success" /> </TimelineSeparator>
-                    <TimelineContent>Stop {alphabet[indiceParadaIda++]}</TimelineContent>
-                  </TimelineItem>
-                </Timeline>
-                <Grid2 container xs={12} justifyContent="right" >
-                  <Button children={"Guardar Cambios"} variant="text" onClick={GuardarRutaIda} />
-                </Grid2>
+        <Box sx={{ height: "83vh", width: '100%' }}>
+          <DataGrid
 
-              </Grid2>
-            </Grid2>
-
-            <Grid2 container xs={12} display={SwitchOn.displayVuelta}>
-              <Grid2 xs={12} sm={8} >
-                {!Linea.vuelta ? <></> :
-                  <GoogleMap
-                    center={defaultLocation}
-                    options={{ mapTypeControl: false, zoom: 13 }}
-                    zoom={14}
-                    onLoad={(map) => initMapVuelta(map)}
-                    mapContainerStyle={{ height: '480px', width: '100%', marginBottom: 8 }}
-                  >
-                  </GoogleMap>}
-                 
-              </Grid2>
-              <Grid2 xs={12} sm={4} >
-                <Timeline
-                  sx={{
-                    m: 0,
-                    mb: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    height: 440,
-                    overflow: "hidden",
-                    overflowY: "scroll",
-                  }}
-                >
-
-                  <TimelineItem>
-                    <TimelineOppositeContent children={"-"} color="textSecondary" />
-                    <TimelineSeparator> <TimelineDot variant="outlined" color="warning" /> <TimelineConnector />  </TimelineSeparator>
-                    <TimelineContent>Salida A</TimelineContent>
-                  </TimelineItem>
-                  {
-                    Linea.vuelta.waypoints.map((point, index) => {
-                      if (point.waypoint.stopover === true) {
-                        return <TimelineItem key={index}>
-                          <TimelineOppositeContent color="textSecondary">
-                            <TextField variant='standard' size='small' sx={{ width: '45px' }}
-                              value={Linea.vuelta.waypoints[index].time.toString()}
-                              InputProps={{ endAdornment: <InputAdornment position="end">m.</InputAdornment> }}
-                              onChange={e => {
-                                var vuelta = Linea.vuelta;
-                                vuelta.waypoints[index].time = parseInt(e.target.value?e.target.value:0)
-                                setLinea({ ...Linea, vuelta: vuelta })
-                              }}
-                            />
-                          </TimelineOppositeContent>
-                          <TimelineSeparator> <TimelineDot variant="outlined" color="error" /> <TimelineConnector />  </TimelineSeparator>
-                          <TimelineContent>{"Stop " + alphabet[indiceParadaVuelta++]}</TimelineContent>
-                        </TimelineItem>
-                      }
-                    })
-                  }
-
-                  <TimelineItem>
-                    <TimelineOppositeContent color="textSecondary">
-                      <TextField variant='standard' size='small' sx={{ width: '45px' }}
-                        value={Linea.vuelta.destination.time.toString()}
-                        InputProps={{
-                          endAdornment: <InputAdornment position="end">m.</InputAdornment>,
-                          //inputProps: { min: 0 }
-
-                        }}
-                        onChange={e => {
-                          var vuelta = Linea.vuelta;
-                          vuelta.destination.time = parseInt(e.target.value?e.target.value:0)
-                          setLinea({ ...Linea, vuelta: vuelta })
-                        }}
-                      />
-                    </TimelineOppositeContent>
-                    <TimelineSeparator> <TimelineDot color="success" /> </TimelineSeparator>
-                    <TimelineContent>Stop {alphabet[indiceParadaVuelta++]}</TimelineContent>
-                  </TimelineItem>
-                </Timeline>
-                <Grid2 container xs={12} justifyContent="right" >
-                  <Button children={"Guardar Cambios"} variant="text" onClick={GuardarRutaVuelta} />
-                </Grid2>
-              </Grid2>
-            </Grid2>
-          </Grid2>
-
+            rows={rutas}
+            columns={columns}
+          />
         </Box>
+
+        <MyDialogCreate Title='Crear Nueva Ruta' Description='Escribe el nombre, la descripción, edita la ubicación y los tiempos entre paradas de la nueva ruta' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createRuta}
+          Conten={
+            <Box >
+              <Grid2 container rowSpacing={1} justifyContent="space-evenly" alignItems="center" >
+                <Grid2 container xs={12} sm={2.7} >
+                  <TextField fullWidth label="Nombre" variant="standard" value={ruta.name} onChange={e => setRuta({ ...ruta, name: e.target.value })} />
+                </Grid2>
+                <Grid2 container xs={0} sm={0.3} >
+                </Grid2>
+                <Grid2 xs={12} sm={5} >
+                  <TextField fullWidth label="Descripción" variant="standard" value={ruta.description} onChange={e => setRuta({ ...ruta, description: e.target.value })} />
+                </Grid2>
+                <Grid2 container xs={4} sm={4} textAlign={'center'} >
+                  <Grid2 xs={12} fontSize={12} color={'lightgray'}>
+                    {SwitchOn.label}
+                  </Grid2>
+                  <Grid2 xs={12} >
+                    <Switch checked={SwitchOn.on} onChange={switchChange} name="gilad" />
+                  </Grid2>
+                </Grid2>
+                <Grid2 xs={12} >
+                  <RutasView SwitchOn={SwitchOn} ruta={ruta} setRuta={setRuta} />
+                </Grid2>
+              </Grid2>
+            </Box>
+          } />
+
+        <MyDialogEdit Title='Editar Linea' Description='Edita los datos de la ruta a continuación' openDialogEdit={openDialogEdit} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={editRuta}
+          Conten={
+            <Box >
+              <Grid2 container rowSpacing={1} justifyContent="space-evenly" alignItems="center" >
+                <Grid2 container xs={12} sm={2.7} >
+                  <TextField fullWidth label="Nombre" variant="standard" value={ruta.name} onChange={e => setRuta({ ...ruta, name: e.target.value })} />
+                </Grid2>
+                <Grid2 container xs={0} sm={0.3} >
+                </Grid2>
+                <Grid2 xs={12} sm={5} >
+                  <TextField fullWidth label="Descripción" variant="standard" value={ruta.description} onChange={e => setRuta({ ...ruta, description: e.target.value })} />
+                </Grid2>
+                <Grid2 container xs={4} sm={4} textAlign={'center'} >
+                  <Grid2 xs={12} fontSize={12} color={'lightgray'}>
+                    {SwitchOn.label}
+                  </Grid2>
+                  <Grid2 xs={12} >
+                    <Switch checked={SwitchOn.on} onChange={switchChange} name="gilad" />
+                  </Grid2>
+                </Grid2>
+                <Grid2 xs={12} >
+                  <RutasView SwitchOn={SwitchOn} ruta={ruta} setRuta={setRuta} />
+                </Grid2>
+              </Grid2>
+            </Box>
+          }
+        />
+        <MyDialogEdit Title='Activar ruta' Description={`¿Estás seguro de poner la ruta "${ruta.name}" como la principal?`} openDialogEdit={openDialogActivate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncEdit={activateRuta} />
+        <MyDialogDelete Title='Eliminar ruta' Description={`¿Estás seguro de eliminar la ruta "${ruta.name}"?`} openDialogDelete={openDialogDelete} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncDelete={deleteRuta} />
+
+      </Box>
     } />
   )
 }
 
 export default RutasScreen
-
-
-
-
-/*
-import * as React from 'react';
-import Timeline from '@mui/lab/Timeline';
-import TimelineItem from '@mui/lab/TimelineItem';
-import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import TimelineConnector from '@mui/lab/TimelineConnector';
-import TimelineContent, { timelineContentClasses } from '@mui/lab/TimelineContent';
-import TimelineDot from '@mui/lab/TimelineDot';
-import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
-
-export default function OppositeContentTimeline() {
-  return (
-    <React.Fragment>
-      <Timeline
-        sx={{
-          [`& .${timelineContentClasses.root}`]: {
-            flex: 0.2,
-          },
-        }}
-      >
-        <TimelineItem>
-          <TimelineOppositeContent color="textSecondary">
-            09:30 am
-          </TimelineOppositeContent>
-          <TimelineSeparator>
-            <TimelineDot />
-            <TimelineConnector />
-          </TimelineSeparator>
-          <TimelineContent>Eat</TimelineContent>
-        </TimelineItem>
-        <TimelineItem>
-          <TimelineOppositeContent color="textSecondary">
-            10:00 am
-          </TimelineOppositeContent>
-          <TimelineSeparator>
-            <TimelineDot />
-          </TimelineSeparator>
-          <TimelineContent>Code</TimelineContent>
-        </TimelineItem>
-      </Timeline>
-    </React.Fragment>
-  );
-}
-*/

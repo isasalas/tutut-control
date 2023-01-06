@@ -34,7 +34,10 @@ import {
     SupervisedUserCircleRounded,
     ControlPointDuplicateRounded,
     EditOffRounded,
-    ChangeCircleRounded
+    ChangeCircleRounded,
+    AccountCircle,
+    Preview,
+    RateReview
 } from '@mui/icons-material';
 
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
@@ -45,9 +48,9 @@ import { urlApi, urlLinea } from '../api/myApiData';
 
 const itemsList = [
     {
-        text: "Vueltas",
+        text: "Viajes",
         icon: <Forward5RoundedIcon />,
-        route: "/vuelta"
+        route: "/viaje"
     },
     {
         text: "Rutas",
@@ -64,11 +67,11 @@ const itemsList = [
         icon: <DirectionsBusRoundedIcon />,
         route: "/perfillinea"
     },
-    {
-        text: "Control",
-        icon: <ControlPointDuplicateRounded />,
-        route: "/control"
-    }
+    /*{
+        text: "Reseñas",
+        icon: <RateReview />,
+        route: "/reseña"
+    }*/
 ];
 
 const userItemsList = [
@@ -78,10 +81,16 @@ const userItemsList = [
         route: "/linea"
     },
     {
-        text: "Admins",
+        text: "Administradores",
         icon: <AdminPanelSettingsRoundedIcon />,
         route: "/admin"
     },
+    {
+        text: "Controles",
+        icon: <Preview />,
+        route: "/control"
+    },
+
     {
         text: "Usuarios",
         icon: <SupervisedUserCircleRounded />,
@@ -178,15 +187,16 @@ const MiniDrawer = (props) => {
 
 
     React.useEffect(() => {
-        if (!sesion.lineaId) navigater("/login", { replace: true });
-        axios.get(urlApi + urlLinea + "/" + sesion.lineaId)
-            .then((response) => { setLinea(response.data); })
+        if (!sesion.linea) navigater("/trabajo", { replace: true });
+        setLinea(sesion.linea)
+        /*axios.get(urlApi + urlLinea + "/" + sesion.linea.id)
+            .then((response) => { setLinea(response.data); })*/
     }, [])
 
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
-            <AppBar position="fixed"  open={open}>
+            <AppBar position="fixed" open={open}>
                 <Toolbar>
                     <IconButton color="inherit"
                         aria-label="open drawer"
@@ -197,7 +207,19 @@ const MiniDrawer = (props) => {
                             ...(open && { display: 'none' }),
                         }}
                     > <MenuIcon /> </IconButton>
-                    <Typography variant="h6" noWrap component="div">  {!Linea? "...": Linea.name} </Typography>
+                    <Typography variant="h6" noWrap component="div">  {!Linea ? "..." : Linea.name} </Typography>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <IconButton onClick={() => {
+                        const data = sesion;
+                        data.linea = null;
+                        window.localStorage.setItem('sesion', JSON.stringify(data))
+                        setSesion({ ...sesion, linea: null });
+                    }} title={"Cambiar linea de trabajo"} component={RouterLink} to="/trabajo" > <ChangeCircleRounded /> </IconButton>
+                    <IconButton  title={"Editar perfil"} component={RouterLink} to="/perfil" > <AccountCircle /> </IconButton>
+                    <IconButton onClick={() => {
+                        window.localStorage.removeItem('sesion');
+                        setSesion();
+                    }}  title={"Cerrar Sesión"} component={RouterLink} to="/login" > <ExitToAppRounded /> </IconButton>
                 </Toolbar>
             </AppBar>
             <Drawer variant="permanent" open={open}>
@@ -261,39 +283,59 @@ const MiniDrawer = (props) => {
                                 ))
 
                             }
-                            <ListItem disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton onClick={() => {
-                                    const data = sesion;
-                                    data.lineaId = null;
-                                    data.linea = null;
-                                    window.localStorage.setItem('sesion', JSON.stringify(data))
-                                    setSesion({ ...sesion, lineaId: null, linea: null });
-                                }} component={RouterLink} to="/dashboard"
-                                    sx={{
-                                        minHeight: 48,
-                                        justifyContent: open ? 'initial' : 'center',
-                                        px: 2.5,
-                                    }}
-                                >
-                                    <ListItemIcon
-                                        sx={{
-                                            minWidth: 0,
-                                            mr: open ? 3 : 'auto',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <ChangeCircleRounded />
-                                    </ListItemIcon>
-                                    <ListItemText primary="Cambiar Linea" sx={{ opacity: open ? 1 : 0 }} />
-                                </ListItemButton>
-                            </ListItem>
+
                         </List>
 
                         <Divider /></div>) : (<div />)}
-                <List>
-
+                {/*<List>
 
                     <ListItem disablePadding sx={{ display: 'block' }}>
+                        <ListItemButton onClick={() => {
+                            const data = sesion;
+                            data.linea = null;
+                            window.localStorage.setItem('sesion', JSON.stringify(data))
+                            setSesion({ ...sesion, linea: null });
+                        }} component={RouterLink} to="/trabajo"
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                            }}
+                        >
+                            <ListItemIcon
+                                sx={{
+                                    minWidth: 0,
+                                    mr: open ? 3 : 'auto',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <ChangeCircleRounded />
+                            </ListItemIcon>
+                            <ListItemText primary="Cambiar Linea" sx={{ opacity: open ? 1 : 0 }} />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
+                        <ListItemButton component={RouterLink} to="/perfil"
+                            sx={{
+                                minHeight: 48,
+                                justifyContent: open ? 'initial' : 'center',
+                                px: 2.5,
+                            }}
+                        >
+                            <ListItemIcon
+                                sx={{
+                                    minWidth: 0,
+                                    mr: open ? 3 : 'auto',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <AccountCircle />
+                            </ListItemIcon>
+                            <ListItemText primary={"Perfil"} sx={{ opacity: open ? 1 : 0 }} />
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding sx={{ display: 'block' }}>
+
                         <ListItemButton onClick={() => {
                             window.localStorage.removeItem('sesion');
                             setSesion();
@@ -317,9 +359,9 @@ const MiniDrawer = (props) => {
                         </ListItemButton>
                     </ListItem>
 
-                </List>
+                </List>*/}
             </Drawer>
-            <Box sx={{ flexGrow: 1, p: 3 }} >
+            <Box sx={{ flexGrow: 1, p: 1.5 }} >
                 <DrawerHeader />
                 {Contend}
             </Box>

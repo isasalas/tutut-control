@@ -8,10 +8,11 @@ import {
 import { UserModelJson } from '../models/models';
 import { urlApi, urlTrabajo, urlUser } from '../api/myApiData';
 import { useSnackbar } from 'notistack';
-import { MyBanner } from '../components/myBanner';
+import { MyBannerPng } from '../components/myBannerPng';
 import { MySearchName } from '../components/MySearch';
 import { Delete, EditRounded, MoreVertRounded } from '@mui/icons-material';
 import { MyDialogCreate, MyDialogDelete, MyDialogEdit } from '../components/MyDialogs';
+import adminPng from '../assets/images/admin.png';
 
 const AdminScreen = () => {
     const [Users, setUsers] = React.useState(Array);
@@ -59,7 +60,10 @@ const AdminScreen = () => {
         setUser(user);
     };
 
-    const handleCloseMenu = () => { setAnchorElMenu(null); };
+    const handleCloseMenu = () => {
+        setUser(UserModelJson);
+        setAnchorElMenu(null);
+    };
 
     const deleteUser = (e) => {
         axios.delete(urlApi + urlUser + '/' + User.id)
@@ -69,7 +73,7 @@ const AdminScreen = () => {
     }
 
     const editUser = (e) => {
-        if (!User.id || !User.name || !User.lastname || !User.phone || !User.email || !User.password) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
+        if (!User.id || !User.name || !User.lastname || !User.phone || !User.password) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
         axios.put(urlApi + urlUser + '/' + User.id, User)
             .then((response) => { enqueueSnackbar(User.name + " editado con exito", { variant: 'success' }); handleCloseDialog(); })
             .catch((e) => { enqueueSnackbar(JSON.stringify(e.response.data.message), { variant: 'error' }); });
@@ -77,10 +81,9 @@ const AdminScreen = () => {
     }
 
     const createUser = (e) => {
-        if (!User.id || !User.name || !User.lastname || !User.phone || !User.email || !User.password || !User.password2) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
-        if (User.password !== User.password2) return enqueueSnackbar("Las contrase;as no coinciden", { variant: 'error' });
+        if (!User.id || !User.name || !User.lastname || !User.phone || !User.password || !User.password2) { return enqueueSnackbar("Introduzca todos los datos", { variant: 'error' }); }
+        if (User.password !== User.password2) return enqueueSnackbar("Las contraseñas no coinciden", { variant: 'error' });
         User.admin = true;
-        delete User.lineaId
         axios.post(urlApi + urlUser, User)
             .then((response) => {
                 enqueueSnackbar(User.name + " creado con exito", { variant: 'success' });
@@ -93,24 +96,23 @@ const AdminScreen = () => {
         <MiniDrawer Contend={
             !Users ? <div>cargando...</div> :
                 <Box>
-                    <MyBanner
+                    <MyBannerPng
                         OpenDialogCreate={handleClickOpenDialogCreate}
-                        MySvg=<MySvgSystem />
-                        MyTitle='Super Usuario'
+                        MyPng={adminPng}
+                        MyTitle='Admin'
                         MyDescription='Aqui podras administrar los datos de los Administradores del sistema'
                         MyBuutonText='Crear Super Usuario' />
-
                     <Divider />
                     <MySearchName searchData={searchData} setSearchData={setSearchData} />
                     <Divider />
-
-                    <Grid container columnSpacing={3} >
+                    <Grid container >
                         {Users.filter((val) => {
                             if (searchData.name === "") return val
                             if (val.name.toLowerCase().includes(searchData.name.toLowerCase())) return val
                         }).map((user) => (
-                            <Grid container key={user.id} display="flex" justifyContent="space-between" alignItems="center" columnSpacing={2} xs={12} sm={6} md={4} lg={3} xl={2}>
-                                <Grid xs={10}>
+                            <Grid container key={user.id} display="flex" justifyContent="space-between" alignItems="center" xs={12} sm={6} md={4} lg={3} xl={2}>
+                                <Grid xs={0.5} />
+                                <Grid xs={9}>
                                     <ListItemText primary={<Typography variant="h6">{user.name + " " + user.lastname}</Typography>} secondary={"id: " + user.id} />
                                 </Grid>
                                 <Grid xs={1} display="flex" justifyContent="center" alignItems="center">
@@ -118,38 +120,37 @@ const AdminScreen = () => {
                                         <MoreVertRounded />
                                     </IconButton>
                                 </Grid>
-                                <Grid xs={12}>
-                                    <Divider variant="mind" />
+                                <Grid xs={0.5} />
+                                <Grid xs={12} >
+                                    <Divider variant="mind" sx={{ marginX: 1 }} />
                                 </Grid>
                             </Grid>))}
                     </Grid>
 
-                    <MyDialogCreate Title='Crear Nuevo Usuario' Description='Introduce los datos del usuario administrador' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createUser}
+                    <MyDialogCreate Title='Crear Nuevo Usuario' Description='Introduce los datos del nuevo usuario administrador' openDialogCreate={openDialogCreate} handleCloseDialog={handleCloseDialog} scrollDialog={scrollDialog} FuncCreate={createUser}
                         Conten={
                             <Box >
                                 <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
                                     <Grid container xs={12} sm={10} >
-                                        <Grid xs={4} >
+                                        <Grid xs={6} >
                                             <TextField fullWidth label="Id" variant="standard" value={User.id} onChange={e => setUser({ ...User, id: e.target.value })} />
                                         </Grid>
-                                        <Grid xs={8} >
+                                        <Grid xs={6} >
+                                            <TextField fullWidth label="Telefono" type="number" variant="standard" value={User.phone} onChange={e => setUser({ ...User, phone: e.target.value })} />
+                                        </Grid>
+                                        <Grid xs={4} >
                                             <TextField fullWidth label="Nombre" variant="standard" value={User.name} onChange={e => setUser({ ...User, name: e.target.value })} />
                                         </Grid>
-                                        <Grid xs={12} >
+                                        <Grid xs={8} >
                                             <TextField fullWidth label="Apellido" variant="standard" value={User.lastname} onChange={e => setUser({ ...User, lastname: e.target.value })} />
                                         </Grid>
                                         <Grid xs={6} >
-                                            <TextField fullWidth type="password" label="contraseña" variant="standard" value={User.password} onChange={e => setUser({ ...User, password: e.target.value })} />
+                                            <TextField fullWidth type="password" label="Contraseña" variant="standard" value={User.password} onChange={e => setUser({ ...User, password: e.target.value })} />
                                         </Grid>
                                         <Grid xs={6} >
                                             <TextField fullWidth type="password" label="Confirma tu contraseña" variant="standard" value={User.password2} onChange={e => setUser({ ...User, password2: e.target.value })} />
                                         </Grid>
-                                        <Grid xs={4} >
-                                            <TextField fullWidth label="Telefono" type="number" variant="standard" value={User.phone} onChange={e => setUser({ ...User, phone: e.target.value })} />
-                                        </Grid>
-                                        <Grid xs={8}>
-                                            <TextField fullWidth type="email" label="email" variant="standard" value={User.email} onChange={e => setUser({ ...User, email: e.target.value })} />
-                                        </Grid>
+
                                     </Grid>
                                 </Grid>
                             </Box>}
@@ -160,21 +161,19 @@ const AdminScreen = () => {
                             <Box >
                                 <Grid container paddingY={1} justifyContent="space-evenly" alignItems="center" spacing={2}>
                                     <Grid container xs={12} sm={10} >
-                                        <Grid xs={4} >
+                                        <Grid xs={6} >
                                             <TextField disabled fullWidth label="Id" variant="standard" value={User.id} onChange={e => setUser({ ...User, id: e.target.value })} />
                                         </Grid>
-                                        <Grid xs={8} >
-                                            <TextField fullWidth label="Nombre" variant="standard" value={User.name} onChange={e => setUser({ ...User, name: e.target.value })} />
-                                        </Grid>
-                                        <Grid xs={12} >
-                                            <TextField fullWidth label="Apellido" variant="standard" value={User.lastname} onChange={e => setUser({ ...User, lastname: e.target.value })} />
-                                        </Grid>
-                                        <Grid xs={4} >
+                                        <Grid xs={6} >
                                             <TextField fullWidth label="Telefono" type="number" variant="standard" value={User.phone} onChange={e => setUser({ ...User, phone: e.target.value })} />
                                         </Grid>
-                                        <Grid xs={8}>
-                                            <TextField fullWidth type="email" label="email" variant="standard" value={User.email} onChange={e => setUser({ ...User, email: e.target.value })} />
+                                        <Grid xs={4} >
+                                            <TextField fullWidth label="Nombre" variant="standard" value={User.name} onChange={e => setUser({ ...User, name: e.target.value })} />
                                         </Grid>
+                                        <Grid xs={8} >
+                                            <TextField fullWidth label="Apellido" variant="standard" value={User.lastname} onChange={e => setUser({ ...User, lastname: e.target.value })} />
+                                        </Grid>
+
                                     </Grid>
                                 </Grid>
                             </Box>}
